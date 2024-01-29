@@ -1,0 +1,21 @@
+#version 330 core
+out vec4 FragColor;
+
+in vec2 TexCoord;
+
+uniform sampler2D textureSampler;
+uniform bool isGreyscale;
+
+void main()
+{
+    vec4 textureColour = texture(textureSampler, TexCoord);
+    if (isGreyscale) {
+        // Greyscale textures only have one channel and it is loaded in as the RED one
+        float redValue = textureColour.x;
+        // Set the G and B values to the same as the red channel so we get a true greyscale image instead of just red
+        textureColour.y = redValue;
+        textureColour.z = redValue;
+    }
+
+    FragColor = textureColour;
+}
