@@ -62,15 +62,18 @@ int main(int argc, char** argv) {
 	GLFWwindow* window;
 	if (setupEnvironment(window, SCR_WIDTH, SCR_HEIGHT, "Minecraft Clone")) return -1;
 
-	const std::string vertexShaderFile = "C:/Users/sjdf/Code/SimpleVoxelEngine/examples/minecraftClone/resources/shaders/vertex.vertexshader";
-	const std::string fragmentShaderFile = "C:/Users/sjdf/Code/SimpleVoxelEngine/examples/minecraftClone/resources/shaders/fragment.fragmentshader";
+	const std::string vertexShaderFile = "C:/Users/sjdf/Code/VoxelEngine/examples/minecraftClone/resources/shaders/vertex.vertexshader";
+	const std::string fragmentShaderFile = "C:/Users/sjdf/Code/VoxelEngine/examples/minecraftClone/resources/shaders/fragment.fragmentshader";
 	Shader shader(vertexShaderFile, fragmentShaderFile);
 
-    
+    const std::string imageFile = "C:/Users/sjdf/Code/VoxelEngine/examples/minecraftClone/resources/textures/stone.png";
+    //const std::string imageFile = "C:/Users/sjdf/Code/VoxelEngine/examples/minecraftClone/resources/textures/container.jpg";
+    //const std::string imageFile = "C:/Users/sjdf/Code/VoxelEngine/examples/minecraftClone/resources/textures/seamless_brick-512x512.png";
+    Texture texture(imageFile);
+
 
     // set up vertex data (and buffer(s)) and configure vertex attributes
     // ------------------------------------------------------------------
-    TextureCoords::BottomLeft;
     std::vector<Vertex> verticesNew = {
         // Back
         {CubeCoords::BackBottomLeft, TextureCoords::BottomRight},
@@ -126,101 +129,8 @@ int main(int argc, char** argv) {
         {CubeCoords::FrontTopLeft, TextureCoords::BottomLeft},
         {CubeCoords::BackTopLeft,TextureCoords::TopLeft}
     };
-
-    float vertices[] = {
-        // positions          // texture coords
-        // back
-        -0.5f, -0.5f, -0.5f,  1.0f, 0.0f, // Bottom left
-         0.5f, -0.5f, -0.5f,  0.0f, 0.0f, // Bottom right
-         0.5f,  0.5f, -0.5f,  0.0f, 1.0f, // Top right
-
-         0.5f,  0.5f, -0.5f,  0.0f, 1.0f, // Top right
-        -0.5f,  0.5f, -0.5f,  1.0f, 1.0f, // Top left
-        -0.5f, -0.5f, -0.5f,  1.0f, 0.0f, // Bottom left
-
-        // front
-        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-         0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-         0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-
-         0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-        -0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
-        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-        
-        
-        // left
-        -0.5f,  0.5f,  0.5f,  1.0f, 1.0f, // top - front
-        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f, // top - back
-        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f, // bottom - back
-
-        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f, // bottom - back
-        -0.5f, -0.5f,  0.5f,  1.0f, 0.0f, // bottom - front
-        -0.5f,  0.5f,  0.5f,  1.0f, 1.0f, // top - front
-
-        
-        // right
-         0.5f,  0.5f,  0.5f,  0.0f, 1.0f, // top front
-         0.5f,  0.5f, -0.5f,  1.0f, 1.0f, // top back
-         0.5f, -0.5f, -0.5f,  1.0f, 0.0f, // bottom back
-
-         0.5f, -0.5f, -0.5f,  1.0f, 0.0f, // bottom back
-         0.5f, -0.5f,  0.5f,  0.0f, 0.0f, // bottom front
-         0.5f,  0.5f,  0.5f,  0.0f, 1.0f, // top front
-
-        // bottom
-        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f, // back left
-         0.5f, -0.5f, -0.5f,  1.0f, 0.0f, // back right
-         0.5f, -0.5f,  0.5f,  1.0f, 1.0f, // front right
-
-         0.5f, -0.5f,  0.5f,  1.0f, 1.0f, // front right
-        -0.5f, -0.5f,  0.5f,  0.0f, 1.0f, // front left
-        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f, // back left
-
-        // top
-        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-         0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-
-         0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-        -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
-        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
-    };
-    float verticesGenerated[36 * 5] = {};
-
-    for (unsigned int i = 0; i < verticesNew.size(); i++) {
-        Vertex& vertex = verticesNew.at(i);
-        float x = vertex.Position.x;
-        float y = vertex.Position.y;
-        float z = vertex.Position.z;
-        float s = vertex.TexCoords.x;
-        float t = vertex.TexCoords.y;
-        verticesGenerated[5 * i] = x;
-        verticesGenerated[5 * i + 1] = y;
-        verticesGenerated[5 * i + 2] = z;
-        verticesGenerated[5 * i + 3] = s;
-        verticesGenerated[5 * i + 4] = t;
-    }
-
     // world space positions of our cubes
     std::vector<glm::vec3> cubePositions;
-    /*
-    [] = {
-        glm::vec3(0.0f,  0.0f,  0.0f),
-        glm::vec3(1.0f,  0.0f,  0.0f),
-
-        glm::vec3(0.0f,  3.0f,  0.0f),
-        glm::vec3(2.0f,  3.0f,  0.0f),
-        //glm::vec3(-1.5f, -2.2f, -2.5f),
-        //glm::vec3(-3.8f, -2.0f, -12.3f),
-        //glm::vec3(2.4f, -0.4f, -3.5f),
-        //glm::vec3(-1.7f,  3.0f, -7.5f),
-        //glm::vec3(1.3f, -2.0f, -2.5f),
-        //glm::vec3(1.5f,  2.0f, -2.5f),
-        //glm::vec3(1.5f,  0.2f, -1.5f),
-        //glm::vec3(-1.3f,  1.0f, -1.5f)
-    };
-    */
-
     unsigned int chunkSize = 1;
     for (unsigned int x = 0; x < chunkSize; x++) {
         for (unsigned int y = 0; y < chunkSize; y++) {
@@ -233,37 +143,7 @@ int main(int argc, char** argv) {
         }
     }
 
-    unsigned int VBO, VAO;
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-
-    glBindVertexArray(VAO);
-
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(verticesGenerated), verticesGenerated, GL_STATIC_DRAW);
-
-    // position attribute
-    // Index (shader location value), Size (number of values), Type of values, Stride, Pointer
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
-    // texture coord attribute
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
-    glEnableVertexAttribArray(1);
-
-    const std::string imageFile = "C:/Users/sjdf/Code/SimpleVoxelEngine/examples/minecraftClone/resources/textures/stone.png";
-    //const std::string imageFile = "C:/Users/sjdf/Code/SimpleVoxelEngine/examples/minecraftClone/resources/textures/container.jpg";
-    //const std::string imageFile = "C:/Users/sjdf/Code/SimpleVoxelEngine/examples/minecraftClone/resources/textures/seamless_brick-512x512.png";
-    Texture texture(imageFile);
-
-    Mesh mesh(verticesNew, &texture, cubePositions);  //(verticesNew, texture, cubePositions);
-
-    /*
-    shader.use();
-    shader.setInt("textureSampler", 0);
-    shader.setBool("isGreyscale", true); // Needed for single channel images 
-    */
-
-	// Configure the voxel engine to display voxels based on a perlin noise algorithm and connect the camera to the mouse and keyboard
+    Mesh mesh(verticesNew, &texture, cubePositions);
 
 	do {
         // per-frame time logic
@@ -280,37 +160,6 @@ int main(int argc, char** argv) {
         // ------
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        // bind textures on corresponding texture units
-        /*
-        glActiveTexture(GL_TEXTURE0);
-        texture.bind();
-        // activate shader
-        shader.use();
-
-        // pass projection matrix to shader (note that in this case it could change every frame)
-        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-        shader.setMat4("projection", projection);
-
-        // camera/view transformation
-        glm::mat4 view = camera.GetViewMatrix();
-        shader.setMat4("view", view);
-
-        // render boxes
-        glBindVertexArray(VAO);
-        for (unsigned int i = 0; i < chunkSize * chunkSize * chunkSize; i++)
-        {
-            // calculate the model matrix for each object and pass it to shader before drawing
-            glm::mat4 model = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
-            model = glm::translate(model, cubePositions[i]);
-            float angle = 0;
-            //float angle = 20.0f * i;
-            model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
-            shader.setMat4("model", model);
-
-            glDrawArrays(GL_TRIANGLES, 0, 36);
-        }
-        */
         mesh.render(shader, camera);
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
@@ -320,11 +169,6 @@ int main(int argc, char** argv) {
 
 	} // Check if the ESC key was pressed or the window was closed
 	while (glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS && glfwWindowShouldClose(window) == 0);
-
-    // optional: de-allocate all resources once they've outlived their purpose:
-    // ------------------------------------------------------------------------
-    glDeleteVertexArrays(1, &VAO);
-    glDeleteBuffers(1, &VBO);
     
 	glfwTerminate();
 }

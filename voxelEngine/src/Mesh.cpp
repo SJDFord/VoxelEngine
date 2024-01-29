@@ -65,6 +65,7 @@ void Mesh::render(Shader& shader, BasicCamera& camera) const {
     glm::mat4 view = camera.GetViewMatrix();
     shader.setMat4("view", view);
 
+    // TODO: Optimise this so we can just generate one mesh per chunk (and one render call)
     // render boxes
     glBindVertexArray(_vao);
     for (unsigned int i = 0; i < _positions.size(); i++)
