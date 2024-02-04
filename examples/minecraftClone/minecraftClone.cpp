@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include "ISprite.h"
 #include <random>
+#include <filesystem>
 #include "PerlinNoiseChunkFactory.h"
 #define STB_IMAGE_IMPLEMENTATION    
 #include <stb_image.h>
@@ -14,6 +15,9 @@
 #include <BasicCamera.h>
 #include <Vertex.h>
 #include <Mesh.h>
+#include <MeshTransformationsBuilder.h>
+
+const std::filesystem::path RESOURCE_FOLDER("C:/Users/sjdf/Code/VoxelEngine/examples/minecraftClone/resources");
 
 bool setupEnvironment(GLFWwindow*& window, int width, int height, const char* title);
 static void error_callback(int error, const char* description);
@@ -21,6 +25,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow* window);
+std::string getResourcePath(const std::string relativePath);
 
 // settings
 const unsigned int SCR_WIDTH = 1600;
@@ -35,6 +40,11 @@ bool firstMouse = true;
 // timing
 float deltaTime = 0.0f;	// time between current frame and last frame
 float lastFrame = 0.0f;
+
+
+// positioning
+glm::vec3 blockPos(0, 0, 0);
+glm::vec3 lightPos = glm::vec3(0.25f, 0.75f, 0.25f);
 
 struct TextureCoords {
     static constexpr glm::vec2 BottomLeft = glm::vec2(0.0f, 0.0f);
@@ -56,25 +66,20 @@ struct CubeCoords {
 };
 
 int main(int argc, char** argv) {
-	// TODO: Re-implement textured cubes with camera movement example/tutorial from learnopengl
-	// Then start to introduce cubes arranged in a grid and chunks etc rather than trying to apply textures to the existing voxel engine cubes
-	
-	GLFWwindow* window;
-	if (setupEnvironment(window, SCR_WIDTH, SCR_HEIGHT, "Minecraft Clone")) return -1;
+    // TODO: Re-implement textured cubes with camera movement example/tutorial from learnopengl
+    // Then start to introduce cubes arranged in a grid and chunks etc rather than trying to apply textures to the existing voxel engine cubes
 
-	const std::string vertexShaderFile = "C:/Users/sjdf/Code/VoxelEngine/examples/minecraftClone/resources/shaders/vertex.vertexshader";
-	const std::string fragmentShaderFile = "C:/Users/sjdf/Code/VoxelEngine/examples/minecraftClone/resources/shaders/fragment.fragmentshader";
-	Shader shader(vertexShaderFile, fragmentShaderFile);
+    GLFWwindow* window;
+    if (setupEnvironment(window, SCR_WIDTH, SCR_HEIGHT, "Minecraft Clone")) return -1;
 
-    const std::string imageFile = "C:/Users/sjdf/Code/VoxelEngine/examples/minecraftClone/resources/textures/stone.png";
-    //const std::string imageFile = "C:/Users/sjdf/Code/VoxelEngine/examples/minecraftClone/resources/textures/container.jpg";
-    //const std::string imageFile = "C:/Users/sjdf/Code/VoxelEngine/examples/minecraftClone/resources/textures/seamless_brick-512x512.png";
-    Texture texture(imageFile);
+    Shader blockShader(getResourcePath("shaders/block.vertexshader"), getResourcePath("shaders/block.fragmentshader"));
+    Shader lightShader(getResourcePath("shaders/light.vertexshader"), getResourcePath("shaders/light.fragmentshader"));
+    Texture texture(getResourcePath("textures/stone.png"));
 
 
     // set up vertex data (and buffer(s)) and configure vertex attributes
     // ------------------------------------------------------------------
-    std::vector<Vertex> verticesNew = {
+    std::vector<Vertex> cubeVertices = {
         // Back
         {CubeCoords::BackBottomLeft, TextureCoords::BottomRight},
         {CubeCoords::BackBottomRight, TextureCoords::BottomLeft},
@@ -129,21 +134,20 @@ int main(int argc, char** argv) {
         {CubeCoords::FrontTopLeft, TextureCoords::BottomLeft},
         {CubeCoords::BackTopLeft,TextureCoords::TopLeft}
     };
-    // world space positions of our cubes
-    std::vector<glm::vec3> cubePositions;
-    unsigned int chunkSize = 1;
-    for (unsigned int x = 0; x < chunkSize; x++) {
-        for (unsigned int y = 0; y < chunkSize; y++) {
-            for (unsigned int z = 0; z < chunkSize; z++) {
-                float xPos = x;
-                float yPos = y;
-                float zPos = z;
-                cubePositions.push_back(glm::vec3(x, y, z));
-            }
-        }
-    }
 
-    Mesh mesh(verticesNew, &texture, cubePositions);
+
+    Mesh blockMesh(cubeVertices);
+    Mesh lightMesh(cubeVertices);
+
+    MeshTransformations blockTransformations = MeshTransformationsBuilder()
+        .rotateAroundYAxis(glm::radians(45.0f))
+        .translateTo(blockPos)
+        .build();
+    MeshTransformations lightTransformations = MeshTransformationsBuilder()
+        .scaleBy(0.5)
+        .translateTo(lightPos)
+        .build();
+
 
 	do {
         // per-frame time logic
@@ -160,7 +164,13 @@ int main(int argc, char** argv) {
         // ------
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        mesh.render(shader, camera);
+
+        std::function<void(const Shader&)> setupBlockShader = [](const Shader& s) { 
+            s.setVec3("objectColor", 1.0f, 0.5f, 0.31f);
+            s.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
+        };
+        blockMesh.render(blockShader, camera, { blockTransformations }, setupBlockShader);
+        lightMesh.render(lightShader, camera, { lightTransformations });
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
@@ -277,4 +287,10 @@ void processInput(GLFWwindow* window)
         camera.ProcessKeyboard(UP, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
         camera.ProcessKeyboard(DOWN, deltaTime);
+}
+
+std::string getResourcePath(const std::string relativePathStr) {
+    std::filesystem::path relativePath(relativePathStr);
+    std::filesystem::path resourcePath = RESOURCE_FOLDER / relativePath;
+    return resourcePath.string();
 }

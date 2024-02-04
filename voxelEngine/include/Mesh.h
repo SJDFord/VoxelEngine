@@ -6,6 +6,8 @@
 #include <vector>
 #include <Shader.h>
 #include <BasicCamera.h>
+#include <MeshTransformations.h>
+#include <functional>
 
 class Mesh
 {
@@ -14,7 +16,6 @@ private:
 	//std::vector<unsigned int> indices; // TODO: EBOs - see https://learnopengl.com/Getting-started/Hello-Triangle#:~:text=An%20EBO%20is%20a%20buffer,the%20solution%20to%20our%20problem.
 	// Note also that for faces with different colours/textures we can't use EBOs
 	const Texture* _texture;
-	std::vector<glm::vec3> _positions;
 	unsigned int _vao;
 	unsigned int _vbo;
 
@@ -24,12 +25,10 @@ private:
 	Mesh& operator=(Mesh&&) noexcept = default; // 5/5: Move Assignment
 public:
 	Mesh(
-		const std::vector<Vertex> vertices, 
-		const Texture* texture, 
-		const std::vector<glm::vec3> positions // World space coordinates
+		const std::vector<Vertex> vertices, // Vertices describing the same repeated mesh
+		const Texture* texture = NULL // Optional texture for the mesh (TODO: Multiple textures (for difference faces))
 	);
 	~Mesh();
 
-	void render(Shader& shader, BasicCamera& camera) const;
-	//GLuint getId() const;
+	void render(Shader& shader, BasicCamera& camera, std::vector<MeshTransformations> perInstanceTransformations, const std::function<void(const Shader&)>& setupShader = [](const Shader& s) {}) const;
 };

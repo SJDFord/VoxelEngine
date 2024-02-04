@@ -109,6 +109,7 @@ copy "$(ProjectDir)*.vox" "$(OutDir)"</Command>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>../../depends/include;../../voxelEngine/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -191,7 +192,11 @@ copy "$(ProjectDir)*.vox" "$(OutDir)"</Command>
     <Image Include="resources\textures\stone.png" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="resources\shaders\block.fragmentshader" />
+    <None Include="resources\shaders\block.vertexshader" />
     <None Include="resources\shaders\fragment.fragmentshader" />
+    <None Include="resources\shaders\light.fragmentshader" />
+    <None Include="resources\shaders\light.vertexshader" />
     <None Include="resources\shaders\vertex.vertexshader" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

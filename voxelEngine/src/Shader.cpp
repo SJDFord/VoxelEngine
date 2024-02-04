@@ -3,6 +3,8 @@
 #include <sstream>
 #include <iostream>
 
+
+// TODO: Split out filesystem code (SRP)
 Shader::Shader(const std::string vertexShaderFilename, const std::string fragmentShaderFilename) {
     // 1. retrieve the vertex/fragment source code from filePath
     std::string vertexCode;

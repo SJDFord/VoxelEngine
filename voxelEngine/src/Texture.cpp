@@ -1,6 +1,7 @@
 #include "Texture.h"
 #include <stb_image.h>
 
+// TODO: Split out filesystem code (SRP)
 // Create a texture in the Graphics card
 Texture::Texture(const std::string filename)
 {
