@@ -44,7 +44,7 @@ float lastFrame = 0.0f;
 
 // positioning
 glm::vec3 blockPos(0, 0, 0);
-glm::vec3 lightPos = glm::vec3(0.25f, 0.75f, 0.25f);
+glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
 
 struct TextureCoords {
     static constexpr glm::vec2 BottomLeft = glm::vec2(0.0f, 0.0f);
@@ -65,6 +65,16 @@ struct CubeCoords {
     static constexpr glm::vec3 BackTopRight = glm::vec3(0.5f, 0.5f, -0.5f);
 };
 
+struct CubeNormals {
+
+    static constexpr glm::vec3 Back = glm::vec3(0.0f, 0.0f, -1.0f);
+    static constexpr glm::vec3 Front = glm::vec3(0.0f, 0.0f, 1.0f);
+    static constexpr glm::vec3 Left = glm::vec3(-1.0f, 0.0f, 0.0f);
+    static constexpr glm::vec3 Right = glm::vec3(1.0f, 0.0f, 0.0f);
+    static constexpr glm::vec3 Bottom = glm::vec3(0.0f, -1.0f, 0.0f);
+    static constexpr glm::vec3 Top = glm::vec3(0.0f, 1.0f, 0.0f);
+};
+
 int main(int argc, char** argv) {
     // TODO: Re-implement textured cubes with camera movement example/tutorial from learnopengl
     // Then start to introduce cubes arranged in a grid and chunks etc rather than trying to apply textures to the existing voxel engine cubes
@@ -76,63 +86,63 @@ int main(int argc, char** argv) {
     Shader lightShader(getResourcePath("shaders/light.vertexshader"), getResourcePath("shaders/light.fragmentshader"));
     Texture texture(getResourcePath("textures/stone.png"));
 
-
+    Vertex v = { CubeCoords::BackBottomLeft, CubeNormals::Back, TextureCoords::BottomRight };
     // set up vertex data (and buffer(s)) and configure vertex attributes
     // ------------------------------------------------------------------
     std::vector<Vertex> cubeVertices = {
         // Back
-        {CubeCoords::BackBottomLeft, TextureCoords::BottomRight},
-        {CubeCoords::BackBottomRight, TextureCoords::BottomLeft},
-        {CubeCoords::BackTopRight, TextureCoords::TopLeft},
+        {CubeCoords::BackBottomLeft, CubeNormals::Back, TextureCoords::BottomRight},
+        {CubeCoords::BackBottomRight, CubeNormals::Back, TextureCoords::BottomLeft},
+        {CubeCoords::BackTopRight, CubeNormals::Back, TextureCoords::TopLeft},
 
-        {CubeCoords::BackTopRight, TextureCoords::TopLeft},
-        {CubeCoords::BackTopLeft, TextureCoords::TopRight},
-        {CubeCoords::BackBottomLeft,TextureCoords::BottomRight},
+        {CubeCoords::BackTopRight, CubeNormals::Back, TextureCoords::TopLeft},
+        {CubeCoords::BackTopLeft, CubeNormals::Back, TextureCoords::TopRight},
+        {CubeCoords::BackBottomLeft, CubeNormals::Back, TextureCoords::BottomRight},
 
         // Front
-        {CubeCoords::FrontBottomLeft, TextureCoords::BottomLeft},
-        {CubeCoords::FrontBottomRight, TextureCoords::BottomRight},
-        {CubeCoords::FrontTopRight, TextureCoords::TopRight},
+        {CubeCoords::FrontBottomLeft, CubeNormals::Front, TextureCoords::BottomLeft},
+        {CubeCoords::FrontBottomRight, CubeNormals::Front, TextureCoords::BottomRight},
+        {CubeCoords::FrontTopRight, CubeNormals::Front, TextureCoords::TopRight},
 
-        {CubeCoords::FrontTopRight, TextureCoords::TopRight},
-        {CubeCoords::FrontTopLeft, TextureCoords::TopLeft},
-        {CubeCoords::FrontBottomLeft,TextureCoords::BottomLeft},
+        {CubeCoords::FrontTopRight, CubeNormals::Front, TextureCoords::TopRight},
+        {CubeCoords::FrontTopLeft, CubeNormals::Front, TextureCoords::TopLeft},
+        {CubeCoords::FrontBottomLeft, CubeNormals::Front,TextureCoords::BottomLeft},
 
         // Left
-        {CubeCoords::FrontTopLeft, TextureCoords::TopRight},
-        {CubeCoords::BackTopLeft, TextureCoords::TopLeft},
-        {CubeCoords::BackBottomLeft, TextureCoords::BottomLeft},
+        {CubeCoords::FrontTopLeft, CubeNormals::Left, TextureCoords::TopRight},
+        {CubeCoords::BackTopLeft,  CubeNormals::Left, TextureCoords::TopLeft},
+        {CubeCoords::BackBottomLeft,  CubeNormals::Left, TextureCoords::BottomLeft},
 
-        {CubeCoords::BackBottomLeft, TextureCoords::BottomLeft},
-        {CubeCoords::FrontBottomLeft, TextureCoords::BottomRight},
-        {CubeCoords::FrontTopLeft,TextureCoords::TopRight},
+        {CubeCoords::BackBottomLeft, CubeNormals::Left, TextureCoords::BottomLeft},
+        {CubeCoords::FrontBottomLeft, CubeNormals::Left, TextureCoords::BottomRight},
+        {CubeCoords::FrontTopLeft, CubeNormals::Left, TextureCoords::TopRight},
 
         // Right
-        {CubeCoords::FrontTopRight, TextureCoords::TopLeft},
-        {CubeCoords::BackTopRight, TextureCoords::TopRight},
-        {CubeCoords::BackBottomRight, TextureCoords::BottomRight},
+        {CubeCoords::FrontTopRight, CubeNormals::Right, TextureCoords::TopLeft},
+        {CubeCoords::BackTopRight, CubeNormals::Right, TextureCoords::TopRight},
+        {CubeCoords::BackBottomRight, CubeNormals::Right, TextureCoords::BottomRight},
 
-        {CubeCoords::BackBottomRight, TextureCoords::BottomRight},
-        {CubeCoords::FrontBottomRight, TextureCoords::BottomLeft},
-        {CubeCoords::FrontTopRight,TextureCoords::TopLeft},
+        {CubeCoords::BackBottomRight, CubeNormals::Right, TextureCoords::BottomRight},
+        {CubeCoords::FrontBottomRight, CubeNormals::Right, TextureCoords::BottomLeft},
+        {CubeCoords::FrontTopRight, CubeNormals::Right, TextureCoords::TopLeft},
 
         // Bottom
-        {CubeCoords::BackBottomLeft, TextureCoords::BottomLeft},
-        {CubeCoords::BackBottomRight, TextureCoords::BottomRight},
-        {CubeCoords::FrontBottomRight, TextureCoords::TopRight},
+        {CubeCoords::BackBottomLeft, CubeNormals::Bottom, TextureCoords::BottomLeft},
+        {CubeCoords::BackBottomRight, CubeNormals::Bottom, TextureCoords::BottomRight},
+        {CubeCoords::FrontBottomRight, CubeNormals::Bottom, TextureCoords::TopRight},
 
-        {CubeCoords::FrontBottomRight, TextureCoords::TopRight},
-        {CubeCoords::FrontBottomLeft, TextureCoords::TopLeft},
-        {CubeCoords::BackBottomLeft,TextureCoords::BottomLeft},
+        {CubeCoords::FrontBottomRight, CubeNormals::Bottom, TextureCoords::TopRight},
+        {CubeCoords::FrontBottomLeft, CubeNormals::Bottom, TextureCoords::TopLeft},
+        {CubeCoords::BackBottomLeft, CubeNormals::Bottom,TextureCoords::BottomLeft},
 
         // Top
-        {CubeCoords::BackTopLeft, TextureCoords::TopLeft},
-        {CubeCoords::BackTopRight, TextureCoords::TopRight},
-        {CubeCoords::FrontTopRight, TextureCoords::BottomRight},
+        {CubeCoords::BackTopLeft, CubeNormals::Top, TextureCoords::TopLeft},
+        {CubeCoords::BackTopRight, CubeNormals::Top, TextureCoords::TopRight},
+        {CubeCoords::FrontTopRight, CubeNormals::Top, TextureCoords::BottomRight},
 
-        {CubeCoords::FrontTopRight, TextureCoords::BottomRight},
-        {CubeCoords::FrontTopLeft, TextureCoords::BottomLeft},
-        {CubeCoords::BackTopLeft,TextureCoords::TopLeft}
+        {CubeCoords::FrontTopRight, CubeNormals::Top, TextureCoords::BottomRight},
+        {CubeCoords::FrontTopLeft, CubeNormals::Top, TextureCoords::BottomLeft},
+        {CubeCoords::BackTopLeft, CubeNormals::Top, TextureCoords::TopLeft}
     };
 
 
@@ -140,12 +150,8 @@ int main(int argc, char** argv) {
     Mesh lightMesh(cubeVertices);
 
     MeshTransformations blockTransformations = MeshTransformationsBuilder()
-        .rotateAroundYAxis(glm::radians(45.0f))
+        //.rotateAroundYAxis(glm::radians(45.0f))
         .translateTo(blockPos)
-        .build();
-    MeshTransformations lightTransformations = MeshTransformationsBuilder()
-        .scaleBy(0.5)
-        .translateTo(lightPos)
         .build();
 
 
@@ -165,9 +171,21 @@ int main(int argc, char** argv) {
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        std::function<void(const Shader&)> setupBlockShader = [](const Shader& s) { 
+        lightPos.x = 1.0f + sin(glfwGetTime()) * 2.0f;
+        lightPos.y = sin(glfwGetTime() / 2.0f) * 1.0f;
+
+
+        MeshTransformations lightTransformations = MeshTransformationsBuilder()
+            .scaleBy(0.2)
+            .translateTo(lightPos)
+            .build();
+
+        std::function<void(const Shader&)> setupBlockShader = [](const Shader& s) {   
             s.setVec3("objectColor", 1.0f, 0.5f, 0.31f);
             s.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
+            s.setVec3("lightPos", lightPos);
+            s.setVec3("viewPos", camera.Position);
+
         };
         blockMesh.render(blockShader, camera, { blockTransformations }, setupBlockShader);
         lightMesh.render(lightShader, camera, { lightTransformations });

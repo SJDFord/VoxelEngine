@@ -157,6 +157,7 @@
     <ClInclude Include="include\MeshTransformations.h" />
     <ClInclude Include="include\MeshTransformationsBuilder.h" />
     <ClInclude Include="include\Shader.h" />
+    <ClInclude Include="include\ShaderLoader.h" />
     <ClInclude Include="include\stb_image.h" />
     <ClInclude Include="include\Texture.h" />
     <ClInclude Include="src\AABBTree.h" />

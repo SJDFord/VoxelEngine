@@ -24,10 +24,15 @@ Mesh::Mesh(
     // vertex Positions
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
+
+    // Vertex normals
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, Normal));
+
     if (this->_texture) {
         // vertex texture coords
-        glEnableVertexAttribArray(1);
-        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, TexCoords));
+        glEnableVertexAttribArray(2);
+        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, TexCoords));
     }
     
     glBindVertexArray(0);
@@ -72,8 +77,8 @@ void Mesh::render(Shader& shader, BasicCamera& camera, std::vector<MeshTransform
     glm::mat4 view = camera.GetViewMatrix();
     shader.setMat4("view", view);
 
-    // TODO: Optimise this so we can just generate one mesh per chunk (and one render call)
-    // render boxes
+    // TODO: Optimise this so we can just generate one mesh for all instances (one render call)
+    // render mesh instances
     glBindVertexArray(_vao);
     for (unsigned int i = 0; i < perInstanceTransformations.size(); i++)
     {
@@ -87,7 +92,7 @@ void Mesh::render(Shader& shader, BasicCamera& camera, std::vector<MeshTransform
         // calculate the model matrix for each object and pass it to shader before drawing
         glm::mat4 model = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
         // Scale, rotation then translation done in this order to minimize unwanted effects
-        fprintf(stdout, "Translating by %f, %f, %f, Rotating by %f, Scaling by %f, %f, %f\n", position.x, position.y, position.z, rotationAngle, scaleFactor.x, scaleFactor.y, scaleFactor.z);
+        //fprintf(stdout, "Translating by %f, %f, %f, Rotating by %f, Scaling by %f, %f, %f\n", position.x, position.y, position.z, rotationAngle, scaleFactor.x, scaleFactor.y, scaleFactor.z);
         model = glm::translate(model, transformations.Position);
         model = glm::rotate(model, transformations.RotationAngle, transformations.RotationAxis);
         model = glm::scale(model, transformations.ScaleFactor);

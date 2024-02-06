@@ -24,9 +24,12 @@ private:
 	Mesh& operator=(const Mesh&) = default;     // 2/5: Copy Assignment
 	Mesh& operator=(Mesh&&) noexcept = default; // 5/5: Move Assignment
 public:
+	// TODO: Revisit if Texture should be passed to Mesh and if rendering should be handled in this class
+	// TODO: Maybe Texture should go into a Material class along with other properties like lighting maps
+	// TODO: Maybe a mesh, transformation and material can be grouped together into a 'render object' with a render method accepting a camera and shader 
 	Mesh(
 		const std::vector<Vertex> vertices, // Vertices describing the same repeated mesh
-		const Texture* texture = NULL // Optional texture for the mesh (TODO: Multiple textures (for difference faces))
+		const Texture* texture = nullptr // Optional texture for the mesh (TODO: Multiple textures (for difference faces))
 	);
 	~Mesh();
 
