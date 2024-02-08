@@ -16,6 +16,7 @@
 #include <Vertex.h>
 #include <Mesh.h>
 #include <MeshTransformationsBuilder.h>
+#include <Material.h>
 
 const std::filesystem::path RESOURCE_FOLDER("C:/Users/sjdf/Code/VoxelEngine/examples/minecraftClone/resources");
 
@@ -26,6 +27,7 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow* window);
 std::string getResourcePath(const std::string relativePath);
+void setMaterial(const Shader& shader, const Material& material);
 
 // settings
 const unsigned int SCR_WIDTH = 1600;
@@ -45,6 +47,8 @@ float lastFrame = 0.0f;
 // positioning
 glm::vec3 blockPos(0, 0, 0);
 glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
+
+glm::vec3 lightColor;
 
 struct TextureCoords {
     static constexpr glm::vec2 BottomLeft = glm::vec2(0.0f, 0.0f);
@@ -171,8 +175,9 @@ int main(int argc, char** argv) {
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        lightPos.x = 1.0f + sin(glfwGetTime()) * 2.0f;
-        lightPos.y = sin(glfwGetTime() / 2.0f) * 1.0f;
+        
+        //lightPos.x = 1.0f + sin(glfwGetTime()) * 2.0f;
+        //lightPos.y = sin(glfwGetTime() / 2.0f) * 1.0f;
 
 
         MeshTransformations lightTransformations = MeshTransformationsBuilder()
@@ -181,10 +186,29 @@ int main(int argc, char** argv) {
             .build();
 
         std::function<void(const Shader&)> setupBlockShader = [](const Shader& s) {   
+
+            
+            setMaterial(s, MaterialPreset::Test);
+
+            s.setVec3("viewPos", camera.Position);
+
+            lightColor.x = sin(glfwGetTime() * 2.0f);
+            lightColor.y = sin(glfwGetTime() * 0.7f);
+            lightColor.z = sin(glfwGetTime() * 1.3f);
+
+            glm::vec3 diffuseColor = lightColor * glm::vec3(0.5f);
+            glm::vec3 ambientColor = diffuseColor * glm::vec3(0.2f);
+
+            s.setVec3("light.position", lightPos);
+            s.setVec3("light.ambient", ambientColor);
+            s.setVec3("light.diffuse", diffuseColor); // darken diffuse light a bit
+            s.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
+            /*
             s.setVec3("objectColor", 1.0f, 0.5f, 0.31f);
             s.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
             s.setVec3("lightPos", lightPos);
             s.setVec3("viewPos", camera.Position);
+            */
 
         };
         blockMesh.render(blockShader, camera, { blockTransformations }, setupBlockShader);
@@ -311,4 +335,12 @@ std::string getResourcePath(const std::string relativePathStr) {
     std::filesystem::path relativePath(relativePathStr);
     std::filesystem::path resourcePath = RESOURCE_FOLDER / relativePath;
     return resourcePath.string();
+}
+
+
+void setMaterial(const Shader& shader, const Material& material) {
+    shader.setVec3("material.ambient", material.Ambient);
+    shader.setVec3("material.diffuse", material.Diffuse);
+    shader.setVec3("material.specular", material.Specular);
+    shader.setFloat("material.shininess", material.Shininess);
 }
