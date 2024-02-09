@@ -187,6 +187,10 @@ copy "$(ProjectDir)*.vox" "$(OutDir)"</Command>
   </ItemGroup>
   <ItemGroup>
     <Image Include="resources\textures\container.jpg" />
+    <Image Include="resources\textures\container2.png" />
+    <Image Include="resources\textures\container2_specular.png" />
+    <Image Include="resources\textures\container2_specular_colored.png" />
+    <Image Include="resources\textures\matrix.jpg" />
     <Image Include="resources\textures\seamless_brick-512x512.png" />
     <Image Include="resources\textures\stone.jpg" />
     <Image Include="resources\textures\stone.png" />

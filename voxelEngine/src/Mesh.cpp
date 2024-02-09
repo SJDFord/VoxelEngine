@@ -3,10 +3,10 @@
 
 Mesh::Mesh(
     const std::vector<Vertex> vertices, 
-    const Texture* texture) {
+    const Material* material) {
 
     this->_vertices = vertices;
-    this->_texture = texture;
+    this->_material = material;
 
     // create buffers/arrays
     glGenVertexArrays(1, &_vao);
@@ -29,10 +29,15 @@ Mesh::Mesh(
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, Normal));
 
-    if (this->_texture) {
+    if (this->_material) {
+        fprintf(stdout, "Material enabled\n");
         // vertex texture coords
         glEnableVertexAttribArray(2);
         glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, TexCoords));
+
+        if (!this->_material->DiffuseMap) {
+            throw "Material diffuse map not set";
+        }
     }
     
     glBindVertexArray(0);
@@ -40,10 +45,11 @@ Mesh::Mesh(
 }
 
 void Mesh::render(Shader& shader, BasicCamera& camera, std::vector<MeshTransformations> perInstanceTransformations, const std::function<void(const Shader&)>& setupShader) const {
-    if (this->_texture) {
+    shader.use();
+    if (this->_material) {
         // TODO: Select texture from texture list
-        unsigned int i = 0;
-        glActiveTexture(GL_TEXTURE0 + i); // active proper texture unit before binding
+        //unsigned int i = 0;
+        //glActiveTexture(GL_TEXTURE0 + i); // active proper texture unit before binding
         // retrieve texture number (the N in diffuse_textureN)
         /*
         string number;
@@ -59,14 +65,35 @@ void Mesh::render(Shader& shader, BasicCamera& camera, std::vector<MeshTransform
         */
         // now set the sampler to the correct texture unit
         //glUniform1i(glGetUniformLocation(shader.ID, (name + number).c_str()), i);
-        shader.setInt("textureSampler", 0);
+        //shader.setInt("textureSampler", 0);
+        shader.setInt("material.diffuse", 0);
+        if (this->_material->SpecularMap) {
+            shader.setInt("material.specular", 1);
+        }
+        if (this->_material->EmissionMap) {
+            shader.setInt("material.emission", 2);
+        }
+        shader.setFloat("material.shininess", this->_material->Shininess);
         // TODO: Determine this value from texture channel(s)
-        shader.setBool("isGreyscale", true); // Needed for single channel images 
+        //shader.setBool("isGreyscale", true); // Needed for single channel images 
         // and finally bind the texture
 
-        this->_texture->bind();
+        //this->_texture->bind();
+
+        glActiveTexture(GL_TEXTURE0);
+        this->_material->DiffuseMap->bind();
+        
+        if (this->_material->SpecularMap) {
+            glActiveTexture(GL_TEXTURE1);
+            this->_material->SpecularMap->bind();
+        }
+
+
+        if (this->_material->EmissionMap) {
+            glActiveTexture(GL_TEXTURE2);
+            this->_material->EmissionMap->bind();
+        }
     }
-    shader.use();
 
     setupShader(shader);
 

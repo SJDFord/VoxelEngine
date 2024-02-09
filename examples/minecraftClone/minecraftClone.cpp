@@ -27,7 +27,6 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow* window);
 std::string getResourcePath(const std::string relativePath);
-void setMaterial(const Shader& shader, const Material& material);
 
 // settings
 const unsigned int SCR_WIDTH = 1600;
@@ -46,7 +45,7 @@ float lastFrame = 0.0f;
 
 // positioning
 glm::vec3 blockPos(0, 0, 0);
-glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
+glm::vec3 lightPos(1.2f, 1.0f, 1.0f);
 
 glm::vec3 lightColor;
 
@@ -88,7 +87,11 @@ int main(int argc, char** argv) {
 
     Shader blockShader(getResourcePath("shaders/block.vertexshader"), getResourcePath("shaders/block.fragmentshader"));
     Shader lightShader(getResourcePath("shaders/light.vertexshader"), getResourcePath("shaders/light.fragmentshader"));
-    Texture texture(getResourcePath("textures/stone.png"));
+    Texture diffuseMap(getResourcePath("textures/container2.png"));
+    Texture specularMap(getResourcePath("textures/container2_specular.png"));
+    Texture emissionMap(getResourcePath("textures/matrix.jpg"));
+    Material material = { &diffuseMap, &specularMap, &emissionMap, 64.0f };
+
 
     Vertex v = { CubeCoords::BackBottomLeft, CubeNormals::Back, TextureCoords::BottomRight };
     // set up vertex data (and buffer(s)) and configure vertex attributes
@@ -150,7 +153,7 @@ int main(int argc, char** argv) {
     };
 
 
-    Mesh blockMesh(cubeVertices);
+    Mesh blockMesh(cubeVertices, &material);
     Mesh lightMesh(cubeVertices);
 
     MeshTransformations blockTransformations = MeshTransformationsBuilder()
@@ -186,32 +189,16 @@ int main(int argc, char** argv) {
             .build();
 
         std::function<void(const Shader&)> setupBlockShader = [](const Shader& s) {   
-
-            
-            setMaterial(s, MaterialPreset::Test);
-
             s.setVec3("viewPos", camera.Position);
 
-            lightColor.x = sin(glfwGetTime() * 2.0f);
-            lightColor.y = sin(glfwGetTime() * 0.7f);
-            lightColor.z = sin(glfwGetTime() * 1.3f);
-
-            glm::vec3 diffuseColor = lightColor * glm::vec3(0.5f);
-            glm::vec3 ambientColor = diffuseColor * glm::vec3(0.2f);
-
+            // light properties
             s.setVec3("light.position", lightPos);
-            s.setVec3("light.ambient", ambientColor);
-            s.setVec3("light.diffuse", diffuseColor); // darken diffuse light a bit
+            s.setVec3("light.ambient", 0.2f, 0.2f, 0.2f);
+            s.setVec3("light.diffuse", 0.5f, 0.5f, 0.5f);
             s.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
-            /*
-            s.setVec3("objectColor", 1.0f, 0.5f, 0.31f);
-            s.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
-            s.setVec3("lightPos", lightPos);
-            s.setVec3("viewPos", camera.Position);
-            */
-
         };
         blockMesh.render(blockShader, camera, { blockTransformations }, setupBlockShader);
+
         lightMesh.render(lightShader, camera, { lightTransformations });
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
@@ -335,12 +322,4 @@ std::string getResourcePath(const std::string relativePathStr) {
     std::filesystem::path relativePath(relativePathStr);
     std::filesystem::path resourcePath = RESOURCE_FOLDER / relativePath;
     return resourcePath.string();
-}
-
-
-void setMaterial(const Shader& shader, const Material& material) {
-    shader.setVec3("material.ambient", material.Ambient);
-    shader.setVec3("material.diffuse", material.Diffuse);
-    shader.setVec3("material.specular", material.Specular);
-    shader.setFloat("material.shininess", material.Shininess);
 }
