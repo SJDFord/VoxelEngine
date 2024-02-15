@@ -5,35 +5,8 @@
 
 // TODO: Use uniform buffer object (UBO) instead of multiple uniform calls
 // TODO: Split out filesystem code (SRP)
-Shader::Shader(const std::string vertexShaderFilename, const std::string fragmentShaderFilename) {
-    // 1. retrieve the vertex/fragment source code from filePath
-    std::string vertexCode;
-    std::string fragmentCode;
-    std::ifstream vShaderFile;
-    std::ifstream fShaderFile;
-    // ensure ifstream objects can throw exceptions:
-    vShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-    fShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-    try
-    {
-        // open files
-        vShaderFile.open(vertexShaderFilename);
-        fShaderFile.open(fragmentShaderFilename);
-        std::stringstream vShaderStream, fShaderStream;
-        // read file's buffer contents into streams
-        vShaderStream << vShaderFile.rdbuf();
-        fShaderStream << fShaderFile.rdbuf();
-        // close file handlers
-        vShaderFile.close();
-        fShaderFile.close();
-        // convert stream into string
-        vertexCode = vShaderStream.str();
-        fragmentCode = fShaderStream.str();
-    }
-    catch (std::ifstream::failure& e)
-    {
-        throw strcat("ERROR::SHADER::FILE_NOT_SUCCESSFULLY_READ: ", e.what());
-    }
+Shader::Shader(const std::string& vertexCode, const std::string& fragmentCode) {  
+    fprintf(stdout, "Shader code %s, %s\n", vertexCode.c_str(), fragmentCode.c_str());
     const char* vShaderCode = vertexCode.c_str();
     const char* fShaderCode = fragmentCode.c_str();
     // 2. compile shaders
@@ -54,7 +27,6 @@ Shader::Shader(const std::string vertexShaderFilename, const std::string fragmen
     glAttachShader(this->_id, fragment);
     glLinkProgram(this->_id);
     checkCompileErrors(this->_id, "PROGRAM");
-    fprintf(stdout, "Loaded vertex and fragment shaders: %s, %s\n", vertexShaderFilename.c_str(), fragmentShaderFilename.c_str());
     // delete the shaders as they're linked into our program now and no longer necessary
     glDeleteShader(vertex);
     glDeleteShader(fragment);

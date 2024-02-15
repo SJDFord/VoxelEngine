@@ -17,6 +17,7 @@
 #include <Mesh.h>
 #include <MeshTransformationsBuilder.h>
 #include <Material.h>
+#include <ShaderLoader.h>
 
 const std::filesystem::path RESOURCE_FOLDER("C:/Users/sjdf/Code/VoxelEngine/examples/minecraftClone/resources");
 
@@ -85,8 +86,9 @@ int main(int argc, char** argv) {
     GLFWwindow* window;
     if (setupEnvironment(window, SCR_WIDTH, SCR_HEIGHT, "Minecraft Clone")) return -1;
 
-    Shader blockShader(getResourcePath("shaders/block.vertexshader"), getResourcePath("shaders/block.fragmentshader"));
-    Shader lightShader(getResourcePath("shaders/light.vertexshader"), getResourcePath("shaders/light.fragmentshader"));
+    ShaderLoader shaderLoader;
+    std::shared_ptr<Shader> blockShader = shaderLoader.loadFromFile(getResourcePath("shaders/block.vertexshader"), getResourcePath("shaders/block.fragmentshader"));
+    std::shared_ptr<Shader> lightShader = shaderLoader.loadFromFile(getResourcePath("shaders/light.vertexshader"), getResourcePath("shaders/light.fragmentshader"));
     Texture diffuseMap(getResourcePath("textures/container2.png"));
     Texture specularMap(getResourcePath("textures/container2_specular.png"));
     Texture emissionMap(getResourcePath("textures/matrix.jpg"));
@@ -188,14 +190,14 @@ int main(int argc, char** argv) {
             .translateTo(lightPos)
             .build();
 
-        std::function<void(const Shader&)> setupBlockShader = [](const Shader& s) {   
-            s.setVec3("viewPos", camera.Position);
+        std::function<void(const std::shared_ptr<Shader>&)> setupBlockShader = [](const std::shared_ptr<Shader>& s) {
+            s->setVec3("viewPos", camera.Position);
 
             // light properties
-            s.setVec3("light.position", lightPos);
-            s.setVec3("light.ambient", 0.2f, 0.2f, 0.2f);
-            s.setVec3("light.diffuse", 0.5f, 0.5f, 0.5f);
-            s.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
+            s->setVec3("light.position", lightPos);
+            s->setVec3("light.ambient", 0.2f, 0.2f, 0.2f);
+            s->setVec3("light.diffuse", 0.5f, 0.5f, 0.5f);
+            s->setVec3("light.specular", 1.0f, 1.0f, 1.0f);
         };
         blockMesh.render(blockShader, camera, { blockTransformations }, setupBlockShader);
 

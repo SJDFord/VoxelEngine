@@ -153,5 +153,6 @@
     <ClCompile Include="include\Vertex.h" />
     <ClCompile Include="src\Mesh.cpp" />
     <ClCompile Include="src\MeshTransformationsBuilder.cpp" />
+    <ClCompile Include="src\ShaderLoader.cpp" />
   </ItemGroup>
 </Project>

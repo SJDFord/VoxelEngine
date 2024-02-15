@@ -8,6 +8,7 @@
 #include <MeshTransformations.h>
 #include <functional>
 #include <Material.h>
+#include <memory>
 
 class Mesh
 {
@@ -33,5 +34,5 @@ public:
 	);
 	~Mesh();
 
-	void render(Shader& shader, BasicCamera& camera, std::vector<MeshTransformations> perInstanceTransformations, const std::function<void(const Shader&)>& setupShader = [](const Shader& s) {}) const;
+	void render(std::shared_ptr<Shader> shader, BasicCamera& camera, std::vector<MeshTransformations> perInstanceTransformations, const std::function<void(std::shared_ptr<Shader> shader)>& setupShader = [](std::shared_ptr<Shader> shader) {}) const;
 };

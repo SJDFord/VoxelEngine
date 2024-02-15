@@ -16,7 +16,7 @@ private:
 
     void checkCompileErrors(GLuint shader, std::string type) const;
 public:
-	Shader(const std::string vertexShaderFilename, const std::string fragmentShaderFilename);
+	Shader(const std::string& vertexCode, const std::string& fragmentCode);
 	~Shader();
 
     void use() const;

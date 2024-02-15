@@ -44,8 +44,8 @@ Mesh::Mesh(
 
 }
 
-void Mesh::render(Shader& shader, BasicCamera& camera, std::vector<MeshTransformations> perInstanceTransformations, const std::function<void(const Shader&)>& setupShader) const {
-    shader.use();
+void Mesh::render(std::shared_ptr<Shader> shader, BasicCamera& camera, std::vector<MeshTransformations> perInstanceTransformations, const std::function<void(std::shared_ptr<Shader> shader)>& setupShader) const {
+    shader->use();
     if (this->_material) {
         // TODO: Select texture from texture list
         //unsigned int i = 0;
@@ -66,14 +66,14 @@ void Mesh::render(Shader& shader, BasicCamera& camera, std::vector<MeshTransform
         // now set the sampler to the correct texture unit
         //glUniform1i(glGetUniformLocation(shader.ID, (name + number).c_str()), i);
         //shader.setInt("textureSampler", 0);
-        shader.setInt("material.diffuse", 0);
+        shader->setInt("material.diffuse", 0);
         if (this->_material->SpecularMap) {
-            shader.setInt("material.specular", 1);
+            shader->setInt("material.specular", 1);
         }
         if (this->_material->EmissionMap) {
-            shader.setInt("material.emission", 2);
+            shader->setInt("material.emission", 2);
         }
-        shader.setFloat("material.shininess", this->_material->Shininess);
+        shader->setFloat("material.shininess", this->_material->Shininess);
         // TODO: Determine this value from texture channel(s)
         //shader.setBool("isGreyscale", true); // Needed for single channel images 
         // and finally bind the texture
@@ -94,15 +94,15 @@ void Mesh::render(Shader& shader, BasicCamera& camera, std::vector<MeshTransform
             this->_material->EmissionMap->bind();
         }
     }
-
+    setupShader(shader);
     setupShader(shader);
 
     glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)1600 / (float)1200, 0.1f, 100.0f);
-    shader.setMat4("projection", projection);
+    shader->setMat4("projection", projection);
 
     // camera/view transformation
     glm::mat4 view = camera.GetViewMatrix();
-    shader.setMat4("view", view);
+    shader->setMat4("view", view);
 
     // TODO: Optimise this so we can just generate one mesh for all instances (one render call)
     // render mesh instances
@@ -126,7 +126,7 @@ void Mesh::render(Shader& shader, BasicCamera& camera, std::vector<MeshTransform
    
         // glm::radians(angle)
 
-        shader.setMat4("model", model);
+        shader->setMat4("model", model);
         glDrawArrays(GL_TRIANGLES, 0, _vertices.size());
     }
 }
