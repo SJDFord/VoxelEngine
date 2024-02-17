@@ -153,6 +153,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="include\BasicCamera.h" />
+    <ClInclude Include="include\glCheck.h" />
+    <ClInclude Include="include\TextureLoader.h" />
     <ClInclude Include="include\Material.h" />
     <ClInclude Include="include\Mesh.h" />
     <ClInclude Include="include\MeshTransformations.h" />
@@ -211,6 +213,7 @@
     <ClCompile Include="include\Vertex.h" />
     <ClCompile Include="src\AABBTree.cpp" />
     <ClCompile Include="src\BehaviourFactory.cpp" />
+    <ClCompile Include="src\glCheck.cpp" />
     <ClCompile Include="src\Mesh.cpp" />
     <ClCompile Include="src\MeshTransformationsBuilder.cpp" />
     <ClCompile Include="src\Shader.cpp" />
@@ -220,6 +223,7 @@
     <ClCompile Include="src\Chunk.cpp" />
     <ClCompile Include="src\Texture.cpp" />
     <ClCompile Include="src\TexturedVoxelRenderer.cpp" />
+    <ClCompile Include="src\TextureLoader.cpp" />
     <ClCompile Include="src\VoxelContainerGeometry.cpp" />
     <ClCompile Include="src\ChunkManager.cpp" />
     <ClCompile Include="src\VoxelRenderer.cpp" />

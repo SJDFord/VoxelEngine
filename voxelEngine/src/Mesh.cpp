@@ -1,4 +1,5 @@
 #include <Mesh.h>
+#include <glCheck.h>
 // See https://learnopengl.com/Model-Loading/Mesh
 
 Mesh::Mesh(
@@ -9,38 +10,38 @@ Mesh::Mesh(
     this->_material = material;
 
     // create buffers/arrays
-    glGenVertexArrays(1, &_vao);
-    glGenBuffers(1, &_vbo);
+    glCheck(glGenVertexArrays(1, &_vao));
+    glCheck(glGenBuffers(1, &_vbo));
 
-    glBindVertexArray(_vao);
+    glCheck(glBindVertexArray(_vao));
     // load data into vertex buffers
-    glBindBuffer(GL_ARRAY_BUFFER, _vbo);
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, _vbo));
     // A great thing about structs is that their memory layout is sequential for all its items.
     // The effect is that we can simply pass a pointer to the struct and it translates perfectly to a glm::vec3/2 array which
     // again translates to 3/2 floats which translates to a byte array.
-    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), &vertices[0], GL_STATIC_DRAW);
+    glCheck(glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), &vertices[0], GL_STATIC_DRAW));
 
     // set the vertex attribute pointers
     // vertex Positions
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
+    glCheck(glEnableVertexAttribArray(0));
+    glCheck(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0));
 
     // Vertex normals
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, Normal));
+    glCheck(glEnableVertexAttribArray(1));
+    glCheck(glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, Normal)));
 
     if (this->_material) {
         fprintf(stdout, "Material enabled\n");
         // vertex texture coords
-        glEnableVertexAttribArray(2);
-        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, TexCoords));
+        glCheck(glEnableVertexAttribArray(2));
+        glCheck(glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, TexCoords)));
 
-        if (!this->_material->DiffuseMap) {
+        if (!(this->_material->DiffuseMap)) {
             throw "Material diffuse map not set";
         }
     }
     
-    glBindVertexArray(0);
+    glCheck(glBindVertexArray(0));
 
 }
 
@@ -80,17 +81,17 @@ void Mesh::render(std::shared_ptr<Shader> shader, BasicCamera& camera, std::vect
 
         //this->_texture->bind();
 
-        glActiveTexture(GL_TEXTURE0);
+        glCheck(glActiveTexture(GL_TEXTURE0));
         this->_material->DiffuseMap->bind();
         
         if (this->_material->SpecularMap) {
-            glActiveTexture(GL_TEXTURE1);
+            glCheck(glActiveTexture(GL_TEXTURE1));
             this->_material->SpecularMap->bind();
         }
 
 
         if (this->_material->EmissionMap) {
-            glActiveTexture(GL_TEXTURE2);
+            glCheck(glActiveTexture(GL_TEXTURE2));
             this->_material->EmissionMap->bind();
         }
     }
@@ -106,7 +107,7 @@ void Mesh::render(std::shared_ptr<Shader> shader, BasicCamera& camera, std::vect
 
     // TODO: Optimise this so we can just generate one mesh for all instances (one render call)
     // render mesh instances
-    glBindVertexArray(_vao);
+    glCheck(glBindVertexArray(_vao));
     for (unsigned int i = 0; i < perInstanceTransformations.size(); i++)
     {
         MeshTransformations transformations = perInstanceTransformations[i];
@@ -127,12 +128,12 @@ void Mesh::render(std::shared_ptr<Shader> shader, BasicCamera& camera, std::vect
         // glm::radians(angle)
 
         shader->setMat4("model", model);
-        glDrawArrays(GL_TRIANGLES, 0, _vertices.size());
+        glCheck(glDrawArrays(GL_TRIANGLES, 0, _vertices.size()));
     }
 }
 
 Mesh::~Mesh() {
-    glDeleteVertexArrays(1, &_vao);
-    glDeleteBuffers(1, &_vbo);
+    glCheck(glDeleteVertexArrays(1, &_vao));
+    glCheck(glDeleteBuffers(1, &_vbo));
     fprintf(stdout, "Mesh disposed: %s\n", "placeholder");
 }

@@ -18,10 +18,21 @@
 #include <MeshTransformationsBuilder.h>
 #include <Material.h>
 #include <ShaderLoader.h>
+#include <TextureLoader.h>
+#include <glCheck.h>
 
 const std::filesystem::path RESOURCE_FOLDER("C:/Users/sjdf/Code/VoxelEngine/examples/minecraftClone/resources");
 
-bool setupEnvironment(GLFWwindow*& window, int width, int height, const char* title);
+struct DestroyglfwWin {
+
+    void operator()(GLFWwindow* ptr) {
+        fprintf(stdout, "Destroying window %s", "test");
+        glfwDestroyWindow(ptr);
+    }
+
+};
+
+std::unique_ptr<GLFWwindow, DestroyglfwWin> setupEnvironment(int width, int height, const char* title);
 static void error_callback(int error, const char* description);
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
@@ -83,16 +94,17 @@ int main(int argc, char** argv) {
     // TODO: Re-implement textured cubes with camera movement example/tutorial from learnopengl
     // Then start to introduce cubes arranged in a grid and chunks etc rather than trying to apply textures to the existing voxel engine cubes
 
-    GLFWwindow* window;
-    if (setupEnvironment(window, SCR_WIDTH, SCR_HEIGHT, "Minecraft Clone")) return -1;
+    std::unique_ptr<GLFWwindow, DestroyglfwWin> window = setupEnvironment(SCR_WIDTH, SCR_HEIGHT, "Minecraft Clone");
 
     ShaderLoader shaderLoader;
     std::shared_ptr<Shader> blockShader = shaderLoader.loadFromFile(getResourcePath("shaders/block.vertexshader"), getResourcePath("shaders/block.fragmentshader"));
     std::shared_ptr<Shader> lightShader = shaderLoader.loadFromFile(getResourcePath("shaders/light.vertexshader"), getResourcePath("shaders/light.fragmentshader"));
-    Texture diffuseMap(getResourcePath("textures/container2.png"));
-    Texture specularMap(getResourcePath("textures/container2_specular.png"));
-    Texture emissionMap(getResourcePath("textures/matrix.jpg"));
-    Material material = { &diffuseMap, &specularMap, &emissionMap, 64.0f };
+    TextureLoader textureLoader;
+    std::shared_ptr<Texture> diffuseMap = textureLoader.loadFromFile(getResourcePath("textures/container2.png"));
+    std::shared_ptr<Texture> specularMap = textureLoader.loadFromFile(getResourcePath("textures/container2_specular.png"));
+    std::shared_ptr<Texture> emissionMap = textureLoader.loadFromFile(getResourcePath("textures/matrix.jpg"));
+    // TODO: Create builder for Material
+    Material material = { diffuseMap, specularMap, emissionMap, 64.0f };
 
 
     Vertex v = { CubeCoords::BackBottomLeft, CubeNormals::Back, TextureCoords::BottomRight };
@@ -158,6 +170,7 @@ int main(int argc, char** argv) {
     Mesh blockMesh(cubeVertices, &material);
     Mesh lightMesh(cubeVertices);
 
+    // TODO: Rename to Transform3
     MeshTransformations blockTransformations = MeshTransformationsBuilder()
         //.rotateAroundYAxis(glm::radians(45.0f))
         .translateTo(blockPos)
@@ -173,12 +186,12 @@ int main(int argc, char** argv) {
 
         // input
         // -----
-        processInput(window);
+        processInput(window.get());
 
         // render
         // ------
-        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glCheck(glClearColor(0.2f, 0.3f, 0.3f, 1.0f));
+        glCheck(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 
         
         //lightPos.x = 1.0f + sin(glfwGetTime()) * 2.0f;
@@ -205,21 +218,19 @@ int main(int argc, char** argv) {
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
-        glfwSwapBuffers(window);
+        glfwSwapBuffers(window.get());
         glfwPollEvents();
 
 	} // Check if the ESC key was pressed or the window was closed
-	while (glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS && glfwWindowShouldClose(window) == 0);
-    
-	glfwTerminate();
+	while (glfwGetKey(window.get(), GLFW_KEY_ESCAPE) != GLFW_PRESS && glfwWindowShouldClose(window.get()) == 0);
 }
 
-bool setupEnvironment(GLFWwindow*& window, int width, int height, const char* title)
+std::unique_ptr<GLFWwindow, DestroyglfwWin> setupEnvironment(int width, int height, const char* title)
 {
 	if (!glfwInit())
 	{
 		fprintf(stderr, "Failed to initialize GLFW\n");
-		return true;
+        throw "Failed to initialize GLFW";
 	}
 
 	glfwSetErrorCallback(error_callback);
@@ -229,29 +240,31 @@ bool setupEnvironment(GLFWwindow*& window, int width, int height, const char* ti
 	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // To make MacOS happy; should not be needed
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); //We don't want the old OpenGL 
 
-	window = glfwCreateWindow(width, height, title, nullptr, nullptr);
-	if (window == nullptr) {
+    GLFWwindow* wptr = glfwCreateWindow(width, height, title, nullptr, nullptr);
+    if (wptr == nullptr) {
 		fprintf(stderr, "Failed to open GLFW window. If you have an older Intel GPU, they are not 3.3 compatible. Nor is a VM running in Parallels for Mac.\n");
 		glfwTerminate();
-		return true;
+        throw "Failed to open GLFW window. If you have an older Intel GPU, they are not 3.3 compatible. Nor is a VM running in Parallels for Mac.";
 	}
-	glfwMakeContextCurrent(window);
+
+    std::unique_ptr<GLFWwindow, DestroyglfwWin> window(wptr);
+	glfwMakeContextCurrent(window.get());
     // Make rendering dimensions update when window is resized
-    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+    glfwSetFramebufferSizeCallback(window.get(), framebuffer_size_callback);
 
     // Capture different input types
-    glfwSetCursorPosCallback(window, mouse_callback);
-    glfwSetScrollCallback(window, scroll_callback);
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED); // tell GLFW to capture our mouse
+    glfwSetCursorPosCallback(window.get(), mouse_callback);
+    glfwSetScrollCallback(window.get(), scroll_callback);
+    glfwSetInputMode(window.get(), GLFW_CURSOR, GLFW_CURSOR_DISABLED); // tell GLFW to capture our mouse
 
 	//glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
 	gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress));
-	glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
+	glfwSetInputMode(window.get(), GLFW_STICKY_KEYS, GL_TRUE);
 	// Enable depth test
-	glEnable(GL_DEPTH_TEST);
+	glCheck(glEnable(GL_DEPTH_TEST));
 	// Accept fragment if it closer to the camera than the former one
-	glDepthFunc(GL_LESS);
-	return false;
+	glCheck(glDepthFunc(GL_LESS));
+	return window;
 }
 
 static void error_callback(int error, const char* description)

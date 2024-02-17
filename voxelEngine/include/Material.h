@@ -1,11 +1,12 @@
 #pragma once
 #include <glm/glm.hpp>
 #include <Texture.h>
+#include <memory>
 
 // Container for material properties
 struct Material {
-    Texture* DiffuseMap;
-    Texture* SpecularMap;
-    Texture* EmissionMap;
+    std::shared_ptr<Texture> DiffuseMap;
+    std::shared_ptr<Texture> SpecularMap;
+    std::shared_ptr<Texture> EmissionMap;
     float Shininess;
 };

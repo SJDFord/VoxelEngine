@@ -5,6 +5,7 @@
 #include "ICamera.h"
 #include "ILightSource.h"
 #include "ShaderManager.h"
+#include <stb_image.h>
 
 // TODO: Use CMake start vertex definitions and shaders in new VoxelRenderer implementation
 
@@ -16,7 +17,11 @@ VoxelRenderer::VoxelRenderer(): _normalBuffer(0)
 	_vertexArrayId = 0;
 	_visibilityBuffer = 0;
 	const std::string imageFile = "C:/Users/sjdf/Code/SimpleVoxelEngine/examples/minecraftClone/resources/textures/container.jpg";
-	_texture = new Texture(imageFile);
+	int width, height, channelsInFile;
+	stbi_set_flip_vertically_on_load(true); // tell stb_image.h to flip loaded texture's on the y-axis.
+	unsigned char* data = stbi_load(imageFile.c_str(), &width, &height, &channelsInFile, 0);
+	_texture = new Texture(data, width, height, channelsInFile);
+	stbi_image_free(data);
 }
 
 

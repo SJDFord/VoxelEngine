@@ -11,16 +11,12 @@ std::shared_ptr<Shader> ShaderLoader::loadFromFile(const std::string& vertexShad
     {
         vertexCode = readFileAsString(vertexShaderFile);
         fragmentCode = readFileAsString(fragmentShaderFile);
-        fprintf(stdout, "Shader code %s, %s\n", vertexCode.c_str(), fragmentCode.c_str());
-
     }
     catch (std::ifstream::failure& e)
     {
         throw strcat("ERROR::SHADER::FILE_NOT_SUCCESSFULLY_READ: ", e.what());
     }
 
-
-    fprintf(stdout, "Shader code %s, %s\n", vertexCode.c_str(), fragmentCode.c_str());
     return std::make_shared<Shader>(vertexCode, fragmentCode);
 }
 

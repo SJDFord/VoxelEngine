@@ -3,6 +3,8 @@
 #include <string>
 #include <glm/glm.hpp>
 
+
+
 class Shader
 {
 private:
@@ -14,7 +16,9 @@ private:
 	Shader& operator=(const Shader&) = default;     // 2/5: Copy Assignment
 	Shader& operator=(Shader&&) noexcept = default; // 5/5: Move Assignment
 
+    GLuint compile(const std::string& code, GLenum type) const;
     void checkCompileErrors(GLuint shader, std::string type) const;
+    GLuint getUniformLocation(const std::string& name) const;
 public:
 	Shader(const std::string& vertexCode, const std::string& fragmentCode);
 	~Shader();

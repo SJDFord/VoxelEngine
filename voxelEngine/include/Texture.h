@@ -13,7 +13,7 @@ private:
 	Texture& operator=(const Texture&) = default;     // 2/5: Copy Assignment
 	Texture& operator=(Texture&&) noexcept = default; // 5/5: Move Assignment
 public:
-	Texture(const std::string filename);
+	Texture(unsigned char* data, unsigned int width, unsigned int height, unsigned int channels);
 	~Texture();
 
 	void bind() const;
