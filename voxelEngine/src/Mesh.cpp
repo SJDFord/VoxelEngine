@@ -68,12 +68,14 @@ void Mesh::render(std::shared_ptr<Shader> shader, BasicCamera& camera, std::vect
         //glUniform1i(glGetUniformLocation(shader.ID, (name + number).c_str()), i);
         //shader.setInt("textureSampler", 0);
         shader->setInt("material.diffuse", 0);
+        /*
         if (this->_material->SpecularMap) {
             shader->setInt("material.specular", 1);
         }
         if (this->_material->EmissionMap) {
             shader->setInt("material.emission", 2);
         }
+        */
         shader->setFloat("material.shininess", this->_material->Shininess);
         // TODO: Determine this value from texture channel(s)
         //shader.setBool("isGreyscale", true); // Needed for single channel images 
@@ -84,6 +86,7 @@ void Mesh::render(std::shared_ptr<Shader> shader, BasicCamera& camera, std::vect
         glCheck(glActiveTexture(GL_TEXTURE0));
         this->_material->DiffuseMap->bind();
         
+        /*
         if (this->_material->SpecularMap) {
             glCheck(glActiveTexture(GL_TEXTURE1));
             this->_material->SpecularMap->bind();
@@ -94,6 +97,7 @@ void Mesh::render(std::shared_ptr<Shader> shader, BasicCamera& camera, std::vect
             glCheck(glActiveTexture(GL_TEXTURE2));
             this->_material->EmissionMap->bind();
         }
+        */
     }
     setupShader(shader);
     setupShader(shader);

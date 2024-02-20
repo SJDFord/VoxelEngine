@@ -106,6 +106,10 @@
     <ClInclude Include="include\Material.h" />
     <ClInclude Include="include\glCheck.h" />
     <ClInclude Include="include\TextureLoader.h" />
+    <ClInclude Include="include\Lights.h" />
+    <ClInclude Include="include\LightBuilder.h" />
+    <ClInclude Include="include\DirectionalLightBuilder.h" />
+    <ClInclude Include="include\PointLightBuilder.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Camera.cpp">
@@ -158,5 +162,10 @@
     <ClCompile Include="src\ShaderLoader.cpp" />
     <ClCompile Include="src\TextureLoader.cpp" />
     <ClCompile Include="src\glCheck.cpp" />
+    <ClCompile Include="src\LightBuilder.cpp" />
+    <ClCompile Include="src\DirectionalLightBuilder.cpp" />
+    <ClCompile Include="src\PointLightBuilder.cpp" />
+    <ClCompile Include="include\SpotLightBuilder.h" />
+    <ClCompile Include="src\SpotLightBuilder.cpp" />
   </ItemGroup>
 </Project>

@@ -153,7 +153,11 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="include\BasicCamera.h" />
+    <ClInclude Include="include\DirectionalLightBuilder.h" />
     <ClInclude Include="include\glCheck.h" />
+    <ClInclude Include="include\LightBuilder.h" />
+    <ClInclude Include="include\Lights.h" />
+    <ClInclude Include="include\PointLightBuilder.h" />
     <ClInclude Include="include\TextureLoader.h" />
     <ClInclude Include="include\Material.h" />
     <ClInclude Include="include\Mesh.h" />
@@ -210,14 +214,19 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\depends\src\glad\glad.c" />
+    <ClCompile Include="include\SpotLightBuilder.h" />
     <ClCompile Include="include\Vertex.h" />
     <ClCompile Include="src\AABBTree.cpp" />
     <ClCompile Include="src\BehaviourFactory.cpp" />
+    <ClCompile Include="src\DirectionalLightBuilder.cpp" />
     <ClCompile Include="src\glCheck.cpp" />
+    <ClCompile Include="src\LightBuilder.cpp" />
     <ClCompile Include="src\Mesh.cpp" />
     <ClCompile Include="src\MeshTransformationsBuilder.cpp" />
+    <ClCompile Include="src\PointLightBuilder.cpp" />
     <ClCompile Include="src\Shader.cpp" />
     <ClCompile Include="src\ShaderLoader.cpp" />
+    <ClCompile Include="src\SpotLightBuilder.cpp" />
     <ClCompile Include="src\SpriteManager.cpp" />
     <ClCompile Include="src\Camera.cpp" />
     <ClCompile Include="src\Chunk.cpp" />

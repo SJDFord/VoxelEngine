@@ -20,6 +20,9 @@
 #include <ShaderLoader.h>
 #include <TextureLoader.h>
 #include <glCheck.h>
+#include <DirectionalLightBuilder.h>
+#include <PointLightBuilder.h>
+#include <SpotLightBuilder.h>
 
 const std::filesystem::path RESOURCE_FOLDER("C:/Users/sjdf/Code/VoxelEngine/examples/minecraftClone/resources");
 
@@ -39,6 +42,7 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow* window);
 std::string getResourcePath(const std::string relativePath);
+void setupLighting(std::shared_ptr<Shader> shader, Lighting lighting);
 
 // settings
 const unsigned int SCR_WIDTH = 1600;
@@ -105,6 +109,12 @@ int main(int argc, char** argv) {
     std::shared_ptr<Texture> emissionMap = textureLoader.loadFromFile(getResourcePath("textures/matrix.jpg"));
     // TODO: Create builder for Material
     Material material = { diffuseMap, specularMap, emissionMap, 64.0f };
+    DirectionalLightBuilder dirLightBuilder = DirectionalLightBuilder();
+    dirLightBuilder
+        .setProperties(glm::vec3(1.0), glm::vec3(1.0), glm::vec3(1.0))
+        .setDirection(glm::vec3(1.0))
+        .build();
+
 
 
     Vertex v = { CubeCoords::BackBottomLeft, CubeNormals::Back, TextureCoords::BottomRight };
@@ -170,13 +180,40 @@ int main(int argc, char** argv) {
     Mesh blockMesh(cubeVertices, &material);
     Mesh lightMesh(cubeVertices);
 
-    // TODO: Rename to Transform3
+    std::vector<glm::vec3> cubePositions = {
+        glm::vec3(0.0f,  0.0f,  0.0f),
+        glm::vec3(2.0f,  5.0f, -15.0f),
+        glm::vec3(-1.5f, -2.2f, -2.5f),
+        glm::vec3(-3.8f, -2.0f, -12.3f),
+        glm::vec3(2.4f, -0.4f, -3.5f),
+        glm::vec3(-1.7f,  3.0f, -7.5f),
+        glm::vec3(1.3f, -2.0f, -2.5f),
+        glm::vec3(1.5f,  2.0f, -2.5f),
+        glm::vec3(1.5f,  0.2f, -1.5f),
+        glm::vec3(-1.3f,  1.0f, -1.5f)
+        
+    };
+
+    std::vector<MeshTransformations> blockTransformations = {};
+    for (int i = 0; i < cubePositions.size(); i++) {
+        float angle = 20.0f * i;
+        MeshTransformations blockTransformation = MeshTransformationsBuilder()
+            //.rotateAroundYAxis(glm::radians(45.0f))
+            .rotateAroundAxis(glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f))
+            .translateTo(cubePositions[i])
+            .build();
+
+
+
+        blockTransformations.push_back(blockTransformation);
+    }
+
+    /*
     MeshTransformations blockTransformations = MeshTransformationsBuilder()
         //.rotateAroundYAxis(glm::radians(45.0f))
         .translateTo(blockPos)
         .build();
-
-
+        */
 	do {
         // per-frame time logic
         // --------------------
@@ -205,14 +242,45 @@ int main(int argc, char** argv) {
 
         std::function<void(const std::shared_ptr<Shader>&)> setupBlockShader = [](const std::shared_ptr<Shader>& s) {
             s->setVec3("viewPos", camera.Position);
+            Lighting lighting = { {}, {}, {} };
+            DirectionalLightBuilder builder = DirectionalLightBuilder();
+            DirectionalLight dirLight = builder
+                .setDirection({ -0.2f, -1.0f, -0.3f })
+                .setProperties({ 0.05f, 0.05f, 0.05f }, { 0.4f, 0.4f, 0.4f }, { 0.5f, 0.5f, 0.5f })
+                .build();
+            lighting.DirectionalLights.push_back(dirLight);
+
+            PointLightBuilder pointLightBuilder = 
+                PointLightBuilder()
+                .setProperties({ 0.05f, 0.05f, 0.05f }, { 0.8f, 0.8f, 0.8f }, { .0f, 1.0f, 1.0f })
+                .setAttenuation(1.0f, 0.09f, 0.032f);
+
+            std::vector<glm::vec3> pointLightPositions = {
+    glm::vec3(0.7f,  0.2f,  2.0f),
+    glm::vec3(2.3f, -3.3f, -4.0f),
+    glm::vec3(-4.0f,  2.0f, -12.0f),
+    glm::vec3(0.0f,  0.0f, -3.0f)
+            };
+
+            for (int i = 0; i < pointLightPositions.size(); i++) {
+                lighting.PointLights.push_back(pointLightBuilder.setPosition(pointLightPositions[i]).build());
+            }
+
+            SpotLightBuilder spotLightBuilder = SpotLightBuilder();
+            SpotLight spotLight = spotLightBuilder
+                .setPosition(camera.Position)
+                .setDirection(camera.Front)
+                .setProperties({ 0.0f, 0.0f, 0.0f }, { 1.0f, 1.0f, 1.0f }, { 1.0f, 1.0f, 1.0f })
+                .setAttenuation(1.0f, 0.09f, 0.032f)
+                .setCutOffs(glm::cos(glm::radians(12.5f)), glm::cos(glm::radians(15.0f)))
+                .build();
+           
+            lighting.SpotLights.push_back(spotLight);
 
             // light properties
-            s->setVec3("light.position", lightPos);
-            s->setVec3("light.ambient", 0.2f, 0.2f, 0.2f);
-            s->setVec3("light.diffuse", 0.5f, 0.5f, 0.5f);
-            s->setVec3("light.specular", 1.0f, 1.0f, 1.0f);
+            setupLighting(s, lighting);
         };
-        blockMesh.render(blockShader, camera, { blockTransformations }, setupBlockShader);
+        blockMesh.render(blockShader, camera, blockTransformations, setupBlockShader);
 
         lightMesh.render(lightShader, camera, { lightTransformations });
 
@@ -337,4 +405,52 @@ std::string getResourcePath(const std::string relativePathStr) {
     std::filesystem::path relativePath(relativePathStr);
     std::filesystem::path resourcePath = RESOURCE_FOLDER / relativePath;
     return resourcePath.string();
+}
+
+void setupLighting(std::shared_ptr<Shader> shader, Lighting lighting)
+{
+    int dirLightCount = lighting.DirectionalLights.size();
+    shader->setInt("dirLightCount", dirLightCount);
+    for (int i = 0; i < dirLightCount; i++) {
+        DirectionalLight light = lighting.DirectionalLights[i];
+        std::string prefix = "dirLights[" + std::to_string(i) + "].";
+        shader->setVec3(prefix + "direction", light.Direction);
+        shader->setVec3(prefix + "ambient", light.Properties.Ambient);
+        shader->setVec3(prefix + "diffuse", light.Properties.Diffuse);
+        shader->setVec3(prefix + "specular", light.Properties.Specular);
+    }
+
+    int pointLightCount = lighting.PointLights.size();
+    shader->setInt("pointLightCount", pointLightCount);
+    for (int i = 0; i < pointLightCount; i++) {
+        PointLight light = lighting.PointLights[i];
+        std::string prefix = "pointLights[" + std::to_string(i) + "].";
+        shader->setVec3(prefix + "position", light.Position);
+        shader->setVec3(prefix + "ambient", light.Properties.Ambient);
+        shader->setVec3(prefix + "diffuse", light.Properties.Diffuse);
+        shader->setVec3(prefix + "specular", light.Properties.Specular);
+
+        shader->setFloat(prefix + "constant", light.Attenuation.Constant);
+        shader->setFloat(prefix + "linear", light.Attenuation.Linear);
+        shader->setFloat(prefix + "quadratic", light.Attenuation.Quadratic);
+    }
+
+    int spotLightCount = lighting.SpotLights.size();
+    shader->setInt("spotLightCount", spotLightCount);
+    for (int i = 0; i < spotLightCount; i++) {
+        SpotLight light = lighting.SpotLights[i];
+        std::string prefix = "spotLights[" + std::to_string(i) + "].";
+        shader->setVec3(prefix + "position", light.Position);
+        shader->setVec3(prefix + "position", light.Direction);
+        shader->setVec3(prefix + "ambient", light.Properties.Ambient);
+        shader->setVec3(prefix + "diffuse", light.Properties.Diffuse);
+        shader->setVec3(prefix + "specular", light.Properties.Specular);
+
+        shader->setFloat(prefix + "constant", light.Attenuation.Constant);
+        shader->setFloat(prefix + "linear", light.Attenuation.Linear);
+        shader->setFloat(prefix + "quadratic", light.Attenuation.Quadratic);
+
+        shader->setFloat(prefix + "cutOff", light.CutOff);
+        shader->setFloat(prefix + "outerCutOff", light.OuterCutOff);
+    }
 }
