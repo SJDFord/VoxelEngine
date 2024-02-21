@@ -11,25 +11,6 @@ void MeshRenderer::render(
     shader->use();
     const Material* material = meshBuffer->getMaterial();
     if (material) {
-        // TODO: Select texture from texture list
-        //unsigned int i = 0;
-        //glActiveTexture(GL_TEXTURE0 + i); // active proper texture unit before binding
-        // retrieve texture number (the N in diffuse_textureN)
-        /*
-        string number;
-        string name = textures[i].type;
-        if (name == "texture_diffuse")
-            number = std::to_string(diffuseNr++);
-        else if (name == "texture_specular")
-            number = std::to_string(specularNr++); // transfer unsigned int to string
-        else if (name == "texture_normal")
-            number = std::to_string(normalNr++); // transfer unsigned int to string
-        else if (name == "texture_height")
-            number = std::to_string(heightNr++); // transfer unsigned int to string
-        */
-        // now set the sampler to the correct texture unit
-        //glUniform1i(glGetUniformLocation(shader.ID, (name + number).c_str()), i);
-        //shader.setInt("textureSampler", 0);
         shader->setInt("material.diffuse", 0);
         if (material->SpecularMap) {
             shader->setInt("material.specular", 1);
@@ -41,10 +22,8 @@ void MeshRenderer::render(
         */
         shader->setFloat("material.shininess", material->Shininess);
         // TODO: Determine this value from texture channel(s)
-        //shader.setBool("isGreyscale", true); // Needed for single channel images 
-        // and finally bind the texture
-
-        //this->_texture->bind();
+        //shader->setBool("isGreyscale", true); // Needed for single channel images 
+        
 
         glCheck(glActiveTexture(GL_TEXTURE0));
         material->DiffuseMap->bind();
@@ -75,7 +54,7 @@ void MeshRenderer::render(
     // TODO: Optimise this so we can just generate one mesh for all instances (one render call)
     // render mesh instances
     meshBuffer->bind();
-    size_t vertexCount = meshBuffer->getVertices().size();
+    size_t vertexCount = meshBuffer->getVertexCount();
     for (unsigned int i = 0; i < instanceTransformations.size(); i++)
     {
         Transform3 transformation = instanceTransformations[i];

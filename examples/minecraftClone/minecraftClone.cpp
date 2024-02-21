@@ -179,8 +179,10 @@ int main(int argc, char** argv) {
     };
 
 
-    std::shared_ptr<MeshBuffer> blockMesh = std::make_shared<MeshBuffer>(cubeVertices, &material);
-    std::shared_ptr<MeshBuffer> lightMesh = std::make_shared<MeshBuffer>(cubeVertices);
+    Mesh blockMesh = { cubeVertices };
+    Mesh lightMesh = { cubeVertices };
+    std::shared_ptr<MeshBuffer> blockMeshBuffer = std::make_shared<MeshBuffer>(blockMesh, &material);
+    std::shared_ptr<MeshBuffer> lightMeshBuffer = std::make_shared<MeshBuffer>(lightMesh);
 
     std::vector<glm::vec3> cubePositions = {
         glm::vec3(0.0f,  0.0f,  0.0f),
@@ -230,12 +232,6 @@ int main(int argc, char** argv) {
    
     IMeshRenderer *meshRenderer = new MeshRenderer();
 
-    /*
-    MeshTransformations blockTransformations = MeshTransformationsBuilder()
-        //.rotateAroundYAxis(glm::radians(45.0f))
-        .translateTo(blockPos)
-        .build();
-        */
 	do {
         // per-frame time logic
         // --------------------
@@ -256,10 +252,15 @@ int main(int argc, char** argv) {
         //lightPos.x = 1.0f + sin(glfwGetTime()) * 2.0f;
         //lightPos.y = sin(glfwGetTime() / 2.0f) * 1.0f;
 
+        // 0, -1, 0
+        // 1, -1, 0
+        // 0, 1, 0
+        // -1, 1, 0
+
         Lighting lighting = { {}, {}, {} };
         DirectionalLightBuilder builder = DirectionalLightBuilder();
         DirectionalLight dirLight = builder
-            .setDirection({ -0.2f, -1.0f, -0.3f })
+            .setDirection({ cos(glfwGetTime()),sin(glfwGetTime()), 0.0f })
             .setProperties({ 0.05f, 0.05f, 0.05f }, { 0.4f, 0.4f, 0.4f }, { 0.5f, 0.5f, 0.5f })
             .build();
         lighting.DirectionalLights.push_back(dirLight);
@@ -283,22 +284,13 @@ int main(int argc, char** argv) {
             .build();
 
         lighting.SpotLights.push_back(spotLight);
-        /*
-        std::function<void(const std::shared_ptr<Shader>&)> setupBlockShader = [](const std::shared_ptr<Shader>& s) {
-            s->setVec3("viewPos", camera.Position);
-           
+        
 
-            // light properties
-            setupLighting(s, lighting);
-        };*/
-        meshRenderer->render(blockMesh, blockShader, camera, lighting, blockTransformations);
+
+        meshRenderer->render(blockMeshBuffer, blockShader, camera, lighting, blockTransformations);
         
         // TODO: Custom renderer for point lights
-        meshRenderer->render(lightMesh, lightShader, camera, lighting, pointLightTransformations);
-
-        //blockMesh.render(blockShader, camera, blockTransformations);
-
-        //lightMesh.render(lightShader, camera, { lightTransformations });
+        meshRenderer->render(lightMeshBuffer, lightShader, camera, lighting, pointLightTransformations);
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
@@ -307,6 +299,8 @@ int main(int argc, char** argv) {
 
 	} // Check if the ESC key was pressed or the window was closed
 	while (glfwGetKey(window.get(), GLFW_KEY_ESCAPE) != GLFW_PRESS && glfwWindowShouldClose(window.get()) == 0);
+
+    delete meshRenderer;
 }
 
 std::unique_ptr<GLFWwindow, DestroyglfwWin> setupEnvironment(int width, int height, const char* title)
