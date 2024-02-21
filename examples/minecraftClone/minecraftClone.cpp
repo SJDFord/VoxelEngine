@@ -14,8 +14,8 @@
 #include <Texture.h>
 #include <BasicCamera.h>
 #include <Vertex.h>
-#include <Mesh.h>
-#include <MeshTransformationsBuilder.h>
+#include <MeshBuffer.h>
+#include <Transform3Builder.h>
 #include <Material.h>
 #include <ShaderLoader.h>
 #include <TextureLoader.h>
@@ -23,6 +23,8 @@
 #include <DirectionalLightBuilder.h>
 #include <PointLightBuilder.h>
 #include <SpotLightBuilder.h>
+#include <IMeshRenderer.h>
+#include <MeshRenderer.h>
 
 const std::filesystem::path RESOURCE_FOLDER("C:/Users/sjdf/Code/VoxelEngine/examples/minecraftClone/resources");
 
@@ -177,8 +179,8 @@ int main(int argc, char** argv) {
     };
 
 
-    Mesh blockMesh(cubeVertices, &material);
-    Mesh lightMesh(cubeVertices);
+    std::shared_ptr<MeshBuffer> blockMesh = std::make_shared<MeshBuffer>(cubeVertices, &material);
+    std::shared_ptr<MeshBuffer> lightMesh = std::make_shared<MeshBuffer>(cubeVertices);
 
     std::vector<glm::vec3> cubePositions = {
         glm::vec3(0.0f,  0.0f,  0.0f),
@@ -194,19 +196,39 @@ int main(int argc, char** argv) {
         
     };
 
-    std::vector<MeshTransformations> blockTransformations = {};
+    std::vector<Transform3> blockTransformations = {};
     for (int i = 0; i < cubePositions.size(); i++) {
         float angle = 20.0f * i;
-        MeshTransformations blockTransformation = MeshTransformationsBuilder()
+        Transform3 blockTransformation = Transform3Builder()
             //.rotateAroundYAxis(glm::radians(45.0f))
             .rotateAroundAxis(glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f))
             .translateTo(cubePositions[i])
             .build();
 
-
-
         blockTransformations.push_back(blockTransformation);
     }
+
+    std::vector<glm::vec3> pointLightPositions = {
+        glm::vec3(0.7f,  0.2f,  2.0f),
+        glm::vec3(2.3f, -3.3f, -4.0f),
+        glm::vec3(-4.0f,  2.0f, -12.0f),
+        glm::vec3(0.0f,  0.0f, -3.0f)
+    };
+
+    std::vector<Transform3> pointLightTransformations;
+
+    for (int i = 0; i < pointLightPositions.size(); i++) {
+        Transform3 transform = Transform3Builder()
+            .scaleBy(0.2)
+            .translateTo(pointLightPositions[i])
+            .build();
+
+        pointLightTransformations.push_back(transform);
+
+    }
+    
+   
+    IMeshRenderer *meshRenderer = new MeshRenderer();
 
     /*
     MeshTransformations blockTransformations = MeshTransformationsBuilder()
@@ -234,55 +256,49 @@ int main(int argc, char** argv) {
         //lightPos.x = 1.0f + sin(glfwGetTime()) * 2.0f;
         //lightPos.y = sin(glfwGetTime() / 2.0f) * 1.0f;
 
+        Lighting lighting = { {}, {}, {} };
+        DirectionalLightBuilder builder = DirectionalLightBuilder();
+        DirectionalLight dirLight = builder
+            .setDirection({ -0.2f, -1.0f, -0.3f })
+            .setProperties({ 0.05f, 0.05f, 0.05f }, { 0.4f, 0.4f, 0.4f }, { 0.5f, 0.5f, 0.5f })
+            .build();
+        lighting.DirectionalLights.push_back(dirLight);
 
-        MeshTransformations lightTransformations = MeshTransformationsBuilder()
-            .scaleBy(0.2)
-            .translateTo(lightPos)
+        PointLightBuilder pointLightBuilder =
+            PointLightBuilder()
+            .setProperties({ 0.05f, 0.05f, 0.05f }, { 0.8f, 0.8f, 0.8f }, { .0f, 1.0f, 1.0f })
+            .setAttenuation(1.0f, 0.09f, 0.032f);
+
+        for (int i = 0; i < pointLightPositions.size(); i++) {
+            lighting.PointLights.push_back(pointLightBuilder.setPosition(pointLightPositions[i]).build());
+        }
+
+        SpotLightBuilder spotLightBuilder = SpotLightBuilder();
+        SpotLight spotLight = spotLightBuilder
+            .setPosition(camera.Position)
+            .setDirection(camera.Front)
+            .setProperties({ 0.0f, 0.0f, 0.0f }, { 1.0f, 1.0f, 1.0f }, { 1.0f, 1.0f, 1.0f })
+            .setAttenuation(1.0f, 0.09f, 0.032f)
+            .setCutOffs(glm::cos(glm::radians(12.5f)), glm::cos(glm::radians(15.0f)))
             .build();
 
+        lighting.SpotLights.push_back(spotLight);
+        /*
         std::function<void(const std::shared_ptr<Shader>&)> setupBlockShader = [](const std::shared_ptr<Shader>& s) {
             s->setVec3("viewPos", camera.Position);
-            Lighting lighting = { {}, {}, {} };
-            DirectionalLightBuilder builder = DirectionalLightBuilder();
-            DirectionalLight dirLight = builder
-                .setDirection({ -0.2f, -1.0f, -0.3f })
-                .setProperties({ 0.05f, 0.05f, 0.05f }, { 0.4f, 0.4f, 0.4f }, { 0.5f, 0.5f, 0.5f })
-                .build();
-            lighting.DirectionalLights.push_back(dirLight);
-
-            PointLightBuilder pointLightBuilder = 
-                PointLightBuilder()
-                .setProperties({ 0.05f, 0.05f, 0.05f }, { 0.8f, 0.8f, 0.8f }, { .0f, 1.0f, 1.0f })
-                .setAttenuation(1.0f, 0.09f, 0.032f);
-
-            std::vector<glm::vec3> pointLightPositions = {
-    glm::vec3(0.7f,  0.2f,  2.0f),
-    glm::vec3(2.3f, -3.3f, -4.0f),
-    glm::vec3(-4.0f,  2.0f, -12.0f),
-    glm::vec3(0.0f,  0.0f, -3.0f)
-            };
-
-            for (int i = 0; i < pointLightPositions.size(); i++) {
-                lighting.PointLights.push_back(pointLightBuilder.setPosition(pointLightPositions[i]).build());
-            }
-
-            SpotLightBuilder spotLightBuilder = SpotLightBuilder();
-            SpotLight spotLight = spotLightBuilder
-                .setPosition(camera.Position)
-                .setDirection(camera.Front)
-                .setProperties({ 0.0f, 0.0f, 0.0f }, { 1.0f, 1.0f, 1.0f }, { 1.0f, 1.0f, 1.0f })
-                .setAttenuation(1.0f, 0.09f, 0.032f)
-                .setCutOffs(glm::cos(glm::radians(12.5f)), glm::cos(glm::radians(15.0f)))
-                .build();
            
-            lighting.SpotLights.push_back(spotLight);
 
             // light properties
             setupLighting(s, lighting);
-        };
-        blockMesh.render(blockShader, camera, blockTransformations, setupBlockShader);
+        };*/
+        meshRenderer->render(blockMesh, blockShader, camera, lighting, blockTransformations);
+        
+        // TODO: Custom renderer for point lights
+        meshRenderer->render(lightMesh, lightShader, camera, lighting, pointLightTransformations);
 
-        lightMesh.render(lightShader, camera, { lightTransformations });
+        //blockMesh.render(blockShader, camera, blockTransformations);
+
+        //lightMesh.render(lightShader, camera, { lightTransformations });
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------

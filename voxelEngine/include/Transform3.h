@@ -2,7 +2,7 @@
 #include <glm/glm.hpp>
 
 // Container for instance-specific transformations of the same mesh
-struct MeshTransformations {
+struct Transform3 {
     // Scale in x, y, z by this factor
     glm::vec3 ScaleFactor;
 

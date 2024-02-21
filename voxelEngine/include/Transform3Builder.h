@@ -7,9 +7,9 @@
 #include <vector>
 #include <Shader.h>
 #include <BasicCamera.h>
-#include <MeshTransformations.h>
+#include <Transform3.h>
 
-class MeshTransformationsBuilder
+class Transform3Builder
 {
 private:
 	glm::vec3 _scaleFactor = glm::vec3(1.0f);
@@ -21,22 +21,22 @@ private:
 
 public:
     // Create a transformation builder. Defaults to not applying any transformations
-    MeshTransformationsBuilder();
+    Transform3Builder();
 
     // Scale by a given factor in all directions. This will overwrite any other scale operations applied
-    MeshTransformationsBuilder& scaleBy(float scaleFactor);
+    Transform3Builder& scaleBy(float scaleFactor);
     // Scale x, y, z independently by given factor. This will overwrite any other scale operations applied
-    MeshTransformationsBuilder& scaleBy(glm::vec3 scaleFactor);
+    Transform3Builder& scaleBy(glm::vec3 scaleFactor);
     // Rotate around the X-axis. This will overwrite any other rotation operations applied.
-    MeshTransformationsBuilder& rotateAroundXAxis(float rotationAngle);
+    Transform3Builder& rotateAroundXAxis(float rotationAngle);
     // Rotate around the X-axis. This will overwrite any other rotation operations applied.
-    MeshTransformationsBuilder& rotateAroundYAxis(float rotationAngle);
+    Transform3Builder& rotateAroundYAxis(float rotationAngle);
     // Rotate around the X-axis. This will overwrite any other rotation operations applied.
-    MeshTransformationsBuilder& rotateAroundZAxis(float rotationAngle);
+    Transform3Builder& rotateAroundZAxis(float rotationAngle);
     // Rotate around the the given axis. This will overwrite any other rotation operations applied.
-    MeshTransformationsBuilder& rotateAroundAxis(float rotationAngle, glm::vec3 rotationAxis);
+    Transform3Builder& rotateAroundAxis(float rotationAngle, glm::vec3 rotationAxis);
     // Rotate around the the given axis. This will overwrite any other rotation operations applied.
-    MeshTransformationsBuilder& translateTo(glm::vec3 position);
+    Transform3Builder& translateTo(glm::vec3 position);
 
-    MeshTransformations build();
+    Transform3 build();
 };

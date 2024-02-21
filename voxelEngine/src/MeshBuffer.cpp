@@ -1,8 +1,8 @@
-#include <Mesh.h>
+#include <MeshBuffer.h>
 #include <glCheck.h>
 // See https://learnopengl.com/Model-Loading/Mesh
 
-Mesh::Mesh(
+MeshBuffer::MeshBuffer(
     const std::vector<Vertex> vertices, 
     const Material* material) {
 
@@ -45,7 +45,7 @@ Mesh::Mesh(
 
 }
 
-void Mesh::render(std::shared_ptr<Shader> shader, BasicCamera& camera, std::vector<MeshTransformations> perInstanceTransformations, const std::function<void(std::shared_ptr<Shader> shader)>& setupShader) const {
+void MeshBuffer::render(std::shared_ptr<Shader> shader, BasicCamera& camera, std::vector<Transform3> perInstanceTransformations, const std::function<void(std::shared_ptr<Shader> shader)>& setupShader) const {
     shader->use();
     if (this->_material) {
         // TODO: Select texture from texture list
@@ -114,7 +114,7 @@ void Mesh::render(std::shared_ptr<Shader> shader, BasicCamera& camera, std::vect
     glCheck(glBindVertexArray(_vao));
     for (unsigned int i = 0; i < perInstanceTransformations.size(); i++)
     {
-        MeshTransformations transformations = perInstanceTransformations[i];
+        Transform3 transformations = perInstanceTransformations[i];
         
         glm::vec3 position = transformations.Position;
         float rotationAngle = transformations.RotationAngle;
@@ -136,7 +136,21 @@ void Mesh::render(std::shared_ptr<Shader> shader, BasicCamera& camera, std::vect
     }
 }
 
-Mesh::~Mesh() {
+
+std::vector<Vertex> MeshBuffer::getVertices() const {
+    return _vertices;
+}
+
+const Material* MeshBuffer::getMaterial() {
+    return _material;
+}
+
+
+void MeshBuffer::bind() const {
+    glCheck(glBindVertexArray(_vao));
+}
+
+MeshBuffer::~MeshBuffer() {
     glCheck(glDeleteVertexArrays(1, &_vao));
     glCheck(glDeleteBuffers(1, &_vbo));
     fprintf(stdout, "Mesh disposed: %s\n", "placeholder");
