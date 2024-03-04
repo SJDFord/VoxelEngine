@@ -1,0 +1,76 @@
+# Copyright 2019-present, Joseph Garnier
+# All rights reserved.
+#
+# This source code is licensed under the license found in the
+# LICENSE file in the root directory of this source tree.
+# =============================================================================
+# What Is This?
+# -------------
+# See README file in the root directory of this source tree.
+
+# Inspired from: https://gitlab.kitware.com/cmake/community/wikis/FAQ#can-i-do-make-uninstall-with-cmake
+cmake_minimum_required (VERSION 3.20)
+
+if(NOT EXISTS "@LOCAL_BUILD_DIR@/install_manifest.txt")
+	message(FATAL_ERROR "Cannot find install manifest: @LOCAL_BUILD_DIR@/install_manifest.txt")
+endif()
+
+file(READ "@LOCAL_BUILD_DIR@/install_manifest.txt" installed_files)
+string(REGEX REPLACE "\n" ";" installed_files "${installed_files}")
+list(SORT installed_files)
+
+foreach(file IN ITEMS ${installed_files})
+	message(STATUS "Uninstalling \"${file}\"")
+	if(EXISTS "${file}")
+		execute_process(COMMAND
+			"@CMAKE_COMMAND@" -E rm "${file}"
+			OUTPUT_VARIABLE rm_out
+			RESULT_VARIABLE rm_retval
+		)
+		if(NOT ${rm_retval} EQUAL 0)
+			message(FATAL_ERROR "Problem when removing \"${file}\": ${rm_out}")
+		endif()
+	else()
+		message(STATUS "File \"${file}\" does not exist!")
+	endif()
+endforeach()
+
+# Using of a Depth-first search algorithm to get all directories in:
+#    - INSTALL_RELATIVE_DATAROOT_DIR:   `share/<project-name>`, 
+#    - INSTALL_RELATIVE_DOC_DIR:        `share/doc/<project-name>`
+#    - INSTALL_RELATIVE_INCLUDE_DIR:    `include/<project-name>`
+#    - INSTALL_RELATIVE_LIBRARY_DIR:    `lib/<project-name>`
+set(stack "")
+set(visited "")
+list(APPEND stack "@CMAKE_INSTALL_PREFIX@/@LOCAL_INSTALL_RELATIVE_DATAROOT_DIR@" "@CMAKE_INSTALL_PREFIX@/@LOCAL_INSTALL_RELATIVE_DOC_DIR@" "@CMAKE_INSTALL_PREFIX@/@LOCAL_INSTALL_RELATIVE_INCLUDE_DIR@" "@CMAKE_INSTALL_PREFIX@/@LOCAL_INSTALL_RELATIVE_LIBRARY_DIR@")
+while(stack)
+	list(POP_BACK stack directory)
+	if(NOT "${directory}" IN_LIST visited)
+		list(APPEND visited "${directory}")
+		file(GLOB subdirectories LIST_DIRECTORIES on "${directory}/*")
+		foreach(children IN ITEMS ${subdirectories})
+			list(APPEND stack "${children}")
+		endforeach()
+	endif()
+endwhile()
+
+# Remove previously found directories
+list(REVERSE visited)
+foreach(directory IN ITEMS ${visited})
+	message(STATUS "Removing directory \"${directory}\"")
+	if(EXISTS "${directory}")
+		execute_process(COMMAND
+			"@CMAKE_COMMAND@" -E rm -r "${directory}"
+			OUTPUT_VARIABLE rm_out
+			RESULT_VARIABLE rm_retval
+		)
+		if(NOT ${rm_retval} EQUAL 0)
+			message(FATAL_ERROR "Problem when removing \"${directory}\": ${rm_out}")
+		endif()
+	else()
+		message(STATUS "Directory \"${directory}\" does not exist!")
+	endif()
+endforeach()
+
+message("")
+message("Project successfully uninstalled!")
