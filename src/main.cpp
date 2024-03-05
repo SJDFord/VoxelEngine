@@ -22,6 +22,7 @@
 #include <assimp/postprocess.h>
 #include <engine/Window.h>
 #include <engine/WindowLibrary.h>
+#include <engine/GraphicsUtil.h>
 
 const std::filesystem::path RESOURCE_FOLDER("C:/Users/sjdf/Code/VoxelEngine/resources");
 std::string getResourcePath(const std::string relativePath);
@@ -37,43 +38,18 @@ float lastY = screenDimensions.y / 2.0f;
 bool firstMouse = true;
 
 // timing
-float deltaTime = 0.0f;	// time between current frame and last frame
-float lastFrame = 0.0f;
+const double fpsLimit = 1.0 / 60.0;
+double lastUpdateTime = 0;  // number of seconds since the last loop
+double lastFrameTime = 0;   // number of seconds since the last frame
+
+//float deltaTime = 0.0f;	// time between current frame and last frame
+//float lastFrame = 0.0f;
 
 // positioning
 glm::vec3 blockPos(0, 0, 0);
 glm::vec3 lightPos(1.2f, 1.0f, 1.0f);
 
 glm::vec3 lightColor;
-
-struct TextureCoords {
-    static constexpr glm::vec2 BottomLeft = glm::vec2(0.0f, 0.0f);
-    static constexpr glm::vec2 TopLeft = glm::vec2(0.0f, 1.0f);
-    static constexpr glm::vec2 BottomRight = glm::vec2(1.0f, 0.0f);
-    static constexpr glm::vec2 TopRight = glm::vec2(1.0f, 1.0f);
-};
-
-struct CubeCoords {
-    static constexpr glm::vec3 FrontBottomLeft = glm::vec3(-0.5f, -0.5f, 0.5f);
-    static constexpr glm::vec3 FrontTopLeft = glm::vec3(-0.5f, 0.5f, 0.5f);
-    static constexpr glm::vec3 FrontBottomRight = glm::vec3(0.5f, -0.5f, 0.5f);
-    static constexpr glm::vec3 FrontTopRight = glm::vec3(0.5f, 0.5f, 0.5f);
-    
-    static constexpr glm::vec3 BackBottomLeft = glm::vec3(-0.5f, -0.5f, -0.5f);
-    static constexpr glm::vec3 BackTopLeft = glm::vec3(-0.5f, 0.5f, -0.5f);
-    static constexpr glm::vec3 BackBottomRight = glm::vec3(0.5f, -0.5f, -0.5f);
-    static constexpr glm::vec3 BackTopRight = glm::vec3(0.5f, 0.5f, -0.5f);
-};
-
-struct CubeNormals {
-
-    static constexpr glm::vec3 Back = glm::vec3(0.0f, 0.0f, -1.0f);
-    static constexpr glm::vec3 Front = glm::vec3(0.0f, 0.0f, 1.0f);
-    static constexpr glm::vec3 Left = glm::vec3(-1.0f, 0.0f, 0.0f);
-    static constexpr glm::vec3 Right = glm::vec3(1.0f, 0.0f, 0.0f);
-    static constexpr glm::vec3 Bottom = glm::vec3(0.0f, -1.0f, 0.0f);
-    static constexpr glm::vec3 Top = glm::vec3(0.0f, 1.0f, 0.0f);
-};
 
 int main(int argc, char** argv) {
     auto errorCallback = [](int code, const char* description)
@@ -124,70 +100,8 @@ int main(int argc, char** argv) {
         .setDirection(glm::vec3(1.0))
         .build();
 
-
-
-    Vertex v = { CubeCoords::BackBottomLeft, CubeNormals::Back, TextureCoords::BottomRight };
-    // set up vertex data (and buffer(s)) and configure vertex attributes
-    // ------------------------------------------------------------------
-    std::vector<Vertex> cubeVertices = {
-        // Back
-        {CubeCoords::BackBottomLeft, CubeNormals::Back, TextureCoords::BottomRight},
-        {CubeCoords::BackBottomRight, CubeNormals::Back, TextureCoords::BottomLeft},
-        {CubeCoords::BackTopRight, CubeNormals::Back, TextureCoords::TopLeft},
-
-        {CubeCoords::BackTopRight, CubeNormals::Back, TextureCoords::TopLeft},
-        {CubeCoords::BackTopLeft, CubeNormals::Back, TextureCoords::TopRight},
-        {CubeCoords::BackBottomLeft, CubeNormals::Back, TextureCoords::BottomRight},
-
-        // Front
-        {CubeCoords::FrontBottomLeft, CubeNormals::Front, TextureCoords::BottomLeft},
-        {CubeCoords::FrontBottomRight, CubeNormals::Front, TextureCoords::BottomRight},
-        {CubeCoords::FrontTopRight, CubeNormals::Front, TextureCoords::TopRight},
-
-        {CubeCoords::FrontTopRight, CubeNormals::Front, TextureCoords::TopRight},
-        {CubeCoords::FrontTopLeft, CubeNormals::Front, TextureCoords::TopLeft},
-        {CubeCoords::FrontBottomLeft, CubeNormals::Front,TextureCoords::BottomLeft},
-
-        // Left
-        {CubeCoords::FrontTopLeft, CubeNormals::Left, TextureCoords::TopRight},
-        {CubeCoords::BackTopLeft,  CubeNormals::Left, TextureCoords::TopLeft},
-        {CubeCoords::BackBottomLeft,  CubeNormals::Left, TextureCoords::BottomLeft},
-
-        {CubeCoords::BackBottomLeft, CubeNormals::Left, TextureCoords::BottomLeft},
-        {CubeCoords::FrontBottomLeft, CubeNormals::Left, TextureCoords::BottomRight},
-        {CubeCoords::FrontTopLeft, CubeNormals::Left, TextureCoords::TopRight},
-
-        // Right
-        {CubeCoords::FrontTopRight, CubeNormals::Right, TextureCoords::TopLeft},
-        {CubeCoords::BackTopRight, CubeNormals::Right, TextureCoords::TopRight},
-        {CubeCoords::BackBottomRight, CubeNormals::Right, TextureCoords::BottomRight},
-
-        {CubeCoords::BackBottomRight, CubeNormals::Right, TextureCoords::BottomRight},
-        {CubeCoords::FrontBottomRight, CubeNormals::Right, TextureCoords::BottomLeft},
-        {CubeCoords::FrontTopRight, CubeNormals::Right, TextureCoords::TopLeft},
-
-        // Bottom
-        {CubeCoords::BackBottomLeft, CubeNormals::Bottom, TextureCoords::BottomLeft},
-        {CubeCoords::BackBottomRight, CubeNormals::Bottom, TextureCoords::BottomRight},
-        {CubeCoords::FrontBottomRight, CubeNormals::Bottom, TextureCoords::TopRight},
-
-        {CubeCoords::FrontBottomRight, CubeNormals::Bottom, TextureCoords::TopRight},
-        {CubeCoords::FrontBottomLeft, CubeNormals::Bottom, TextureCoords::TopLeft},
-        {CubeCoords::BackBottomLeft, CubeNormals::Bottom,TextureCoords::BottomLeft},
-
-        // Top
-        {CubeCoords::BackTopLeft, CubeNormals::Top, TextureCoords::TopLeft},
-        {CubeCoords::BackTopRight, CubeNormals::Top, TextureCoords::TopRight},
-        {CubeCoords::FrontTopRight, CubeNormals::Top, TextureCoords::BottomRight},
-
-        {CubeCoords::FrontTopRight, CubeNormals::Top, TextureCoords::BottomRight},
-        {CubeCoords::FrontTopLeft, CubeNormals::Top, TextureCoords::BottomLeft},
-        {CubeCoords::BackTopLeft, CubeNormals::Top, TextureCoords::TopLeft}
-    };
-
-
-    Mesh blockMesh = { cubeVertices };
-    Mesh lightMesh = { cubeVertices };
+    Mesh blockMesh = Meshes::Cube;
+    Mesh lightMesh = Meshes::Cube;
     std::shared_ptr<MeshBuffer> blockMeshBuffer = std::make_shared<MeshBuffer>(blockMesh, &material);
     std::shared_ptr<MeshBuffer> lightMeshBuffer = std::make_shared<MeshBuffer>(lightMesh);
 
@@ -240,11 +154,10 @@ int main(int argc, char** argv) {
     IMeshRenderer *meshRenderer = new MeshRenderer();
 
 	do {
-        // per-frame time logic
-        // --------------------
-        float currentFrame = static_cast<float>(glfwGetTime());
-        deltaTime = currentFrame - lastFrame;
-        lastFrame = currentFrame;
+        double now = glfwGetTime();
+        double deltaTime = now - lastUpdateTime;
+
+        WindowLibrary::pollEvents();
 
         // input
         // -----
@@ -269,49 +182,60 @@ int main(int argc, char** argv) {
         if (window->isKeyPressed(WindowKey::WINDOW_KEY_LEFT_SHIFT)) {
             camera.ProcessKeyboard(Basic_Camera_Movement::DOWN, deltaTime);    
         }
-        // render
-        // ------
-        glCheck(glClearColor(0.2f, 0.3f, 0.3f, 1.0f));
-        glCheck(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
+        double frameDelta = now - lastFrameTime;
+        if (frameDelta >= fpsLimit) {
+            float fps = 1.0f / frameDelta;
+            //fprintf(stdout, "FPS: %f\n", fps);
 
-        Lighting lighting = { {}, {}, {} };
-        DirectionalLightBuilder builder = DirectionalLightBuilder();
-        DirectionalLight dirLight = builder
-            .setDirection({ cos(glfwGetTime()),sin(glfwGetTime()), 0.0f })
-            .setProperties({ 0.05f, 0.05f, 0.05f }, { 0.4f, 0.4f, 0.4f }, { 0.5f, 0.5f, 0.5f })
-            .build();
-        lighting.DirectionalLights.push_back(dirLight);
+            // render
+            // ------
+            glCheck(glClearColor(0.2f, 0.3f, 0.3f, 1.0f));
+            glCheck(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 
-        PointLightBuilder pointLightBuilder =
-            PointLightBuilder()
-            .setProperties({ 0.05f, 0.05f, 0.05f }, { 0.8f, 0.8f, 0.8f }, { .0f, 1.0f, 1.0f })
-            .setAttenuation(1.0f, 0.09f, 0.032f);
+            Lighting lighting = { {}, {}, {} };
+            DirectionalLightBuilder builder = DirectionalLightBuilder();
+            DirectionalLight dirLight = builder
+                .setDirection({ cos(glfwGetTime()),sin(glfwGetTime()), 0.0f })
+                .setProperties({ 0.05f, 0.05f, 0.05f }, { 0.4f, 0.4f, 0.4f }, { 0.5f, 0.5f, 0.5f })
+                .build();
+            lighting.DirectionalLights.push_back(dirLight);
 
-        for (int i = 0; i < pointLightPositions.size(); i++) {
-            lighting.PointLights.push_back(pointLightBuilder.setPosition(pointLightPositions[i]).build());
+            PointLightBuilder pointLightBuilder =
+                PointLightBuilder()
+                .setProperties({ 0.05f, 0.05f, 0.05f }, { 0.8f, 0.8f, 0.8f }, { .0f, 1.0f, 1.0f })
+                .setAttenuation(1.0f, 0.09f, 0.032f);
+
+            for (int i = 0; i < pointLightPositions.size(); i++) {
+                lighting.PointLights.push_back(pointLightBuilder.setPosition(pointLightPositions[i]).build());
+            }
+
+            SpotLightBuilder spotLightBuilder = SpotLightBuilder();
+            SpotLight spotLight = spotLightBuilder
+                .setPosition(camera.Position)
+                .setDirection(camera.Front)
+                .setProperties({ 0.0f, 0.0f, 0.0f }, { 1.0f, 1.0f, 1.0f }, { 1.0f, 1.0f, 1.0f })
+                .setAttenuation(1.0f, 0.09f, 0.032f)
+                .setCutOffs(glm::cos(glm::radians(12.5f)), glm::cos(glm::radians(15.0f)))
+                .build();
+
+            lighting.SpotLights.push_back(spotLight);
+
+
+            meshRenderer->render(screenDimensions, blockMeshBuffer, blockShader, camera, lighting, blockTransformations);
+
+            // TODO: Custom renderer for point lights
+            meshRenderer->render(screenDimensions, lightMeshBuffer, lightShader, camera, lighting, pointLightTransformations);
+
+            // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
+            // -------------------------------------------------------------------------------    
+            window->swapBuffers();
+
+            lastFrameTime = now;
         }
 
-        SpotLightBuilder spotLightBuilder = SpotLightBuilder();
-        SpotLight spotLight = spotLightBuilder
-            .setPosition(camera.Position)
-            .setDirection(camera.Front)
-            .setProperties({ 0.0f, 0.0f, 0.0f }, { 1.0f, 1.0f, 1.0f }, { 1.0f, 1.0f, 1.0f })
-            .setAttenuation(1.0f, 0.09f, 0.032f)
-            .setCutOffs(glm::cos(glm::radians(12.5f)), glm::cos(glm::radians(15.0f)))
-            .build();
-
-        lighting.SpotLights.push_back(spotLight);
-    
-
-        meshRenderer->render(screenDimensions, blockMeshBuffer, blockShader, camera, lighting, blockTransformations);
+        lastUpdateTime = now;
         
-        // TODO: Custom renderer for point lights
-        meshRenderer->render(screenDimensions, lightMeshBuffer, lightShader, camera, lighting, pointLightTransformations);
-
-        // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
-        // -------------------------------------------------------------------------------    
-        window->swapBuffers();
-        WindowLibrary::pollEvents();
+        //WindowLibrary::pollEvents();
 
 	} // Check if the ESC key was pressed or the window was closed
 	while (!window->shouldClose());
