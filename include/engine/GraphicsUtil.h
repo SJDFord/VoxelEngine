@@ -90,5 +90,7 @@ Mesh Meshes::Cube = {
             {CubeCoords::FrontTopRight, CubeNormals::Top, TextureCoords::BottomRight},
             {CubeCoords::FrontTopLeft, CubeNormals::Top, TextureCoords::BottomLeft},
             {CubeCoords::BackTopLeft, CubeNormals::Top, TextureCoords::TopLeft}
-        }
+        },
+        {},
+        {}
     };

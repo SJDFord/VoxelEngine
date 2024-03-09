@@ -2,8 +2,11 @@
 #include <engine/glCheck.h>
 
 // Create a texture in the Graphics card
-Texture::Texture(unsigned char* data, unsigned int width, unsigned int height, unsigned int channels)
+Texture::Texture(unsigned char* data, unsigned int width, unsigned int height, unsigned int channels, std::string type, std::string identifier)
 {
+	fprintf(stdout, "Loaded texture %s %s\n", type.c_str(), identifier.c_str());
+	_type = type;
+	_identifier = identifier;
 	GLenum format;
 	switch (channels) {
 	case 1:
@@ -40,6 +43,15 @@ void Texture::bind() const {
 GLuint Texture::getId() const
 {
 	return this->_id;
+}
+
+
+std::string Texture::getType() const {
+	return this->_type;
+}
+
+std::string Texture::getIdentifier() const {
+	return this->_identifier;
 }
 
 // Delete the texture from the graphics card

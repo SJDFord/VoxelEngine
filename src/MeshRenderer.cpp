@@ -10,36 +10,27 @@ void MeshRenderer::render(
     std::vector<Transform3> instanceTransformations) 
 {
     shader->use();
-    const Material* material = meshBuffer->getMaterial();
-    if (material) {
-        shader->setInt("material.diffuse", 0);
-        if (material->SpecularMap) {
-            shader->setInt("material.specular", 1);
+    
+    bool diffuseFound = false;
+    bool specularFound = false;
+	std::vector<std::shared_ptr<Texture>> textures = meshBuffer->getTextures();
+    shader->setFloat("material.shininess", 64.0f);
+    for (int i = 0; i < textures.size(); i++) {  
+        glCheck(glActiveTexture(GL_TEXTURE0 + i));
+        std::shared_ptr<Texture> texture = textures[i];
+        std::string textureType = texture->getType();
+        if(textureType == "texture_diffuse" && !diffuseFound) {
+            shader->setInt("material.diffuse", i);  
+            texture->bind();  
+            diffuseFound = true;
         }
-        /*
-        if (this->_material->EmissionMap) {
-            shader->setInt("material.emission", 2);
+        else if(textureType == "texture_specular" && !specularFound) {
+            shader->setInt("material.specular", i);
+            texture->bind();
+            specularFound = true;
         }
-        */
-        shader->setFloat("material.shininess", material->Shininess);
-        // TODO: Determine this value from texture channel(s)
-        //shader->setBool("isGreyscale", true); // Needed for single channel images 
-        
-
-        glCheck(glActiveTexture(GL_TEXTURE0));
-        material->DiffuseMap->bind();
-
-        if (material->SpecularMap) {
-            glCheck(glActiveTexture(GL_TEXTURE1));
-            material->SpecularMap->bind();
-        }
-        /*
-        if (this->_material->EmissionMap) {
-            glCheck(glActiveTexture(GL_TEXTURE2));
-            this->_material->EmissionMap->bind();
-        }
-        */
     }
+    glCheck(glActiveTexture(GL_TEXTURE0));
 
     shader->setVec3("viewPos", camera.Position);
     applyLighting(shader, lighting);
@@ -59,8 +50,6 @@ void MeshRenderer::render(
 
     // TODO: Optimise this so we can just generate one mesh for all instances (one render call)
     // render mesh instances
-    meshBuffer->bind();
-    size_t vertexCount = meshBuffer->getVertexCount();
     for (unsigned int i = 0; i < instanceTransformations.size(); i++)
     {
         Transform3 transformation = instanceTransformations[i];
@@ -81,7 +70,7 @@ void MeshRenderer::render(
         // glm::radians(angle)
 
         shader->setMat4("model", model);
-        glCheck(glDrawArrays(GL_TRIANGLES, 0, vertexCount));
+        meshBuffer->draw();
     }
 }
 

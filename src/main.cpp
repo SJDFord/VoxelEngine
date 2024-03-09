@@ -23,6 +23,7 @@
 #include <engine/Window.h>
 #include <engine/WindowLibrary.h>
 #include <engine/GraphicsUtil.h>
+#include <engine/Model.h>
 
 const std::filesystem::path RESOURCE_FOLDER("C:/Users/sjdf/Code/VoxelEngine/resources");
 std::string getResourcePath(const std::string relativePath);
@@ -85,15 +86,18 @@ int main(int argc, char** argv) {
         camera.ProcessMouseMovement(xoffset, yoffset);
     };
 
+    //Model model("C:/Users/sjdf/Code/VoxelEngine/resources/models/black_dragon_with_idle_animation/scene.gltf");
+    Model model("C:/Users/sjdf/Code/VoxelEngine/resources/models/backpack/backpack.obj");
+    
     ShaderLoader shaderLoader;
     std::shared_ptr<Shader> blockShader = shaderLoader.loadFromFile(getResourcePath("shaders/block.vertexshader"), getResourcePath("shaders/block.fragmentshader"));
     std::shared_ptr<Shader> lightShader = shaderLoader.loadFromFile(getResourcePath("shaders/light.vertexshader"), getResourcePath("shaders/light.fragmentshader"));
     TextureLoader textureLoader;
-    std::shared_ptr<Texture> diffuseMap = textureLoader.loadFromFile(getResourcePath("textures/container2.png"));
-    std::shared_ptr<Texture> specularMap = textureLoader.loadFromFile(getResourcePath("textures/container2_specular.png"));
-    std::shared_ptr<Texture> emissionMap = textureLoader.loadFromFile(getResourcePath("textures/matrix.jpg"));
+    std::shared_ptr<Texture> diffuseMap = textureLoader.loadFromFile(getResourcePath("textures/container2.png"), "texture_diffuse");
+    std::shared_ptr<Texture> specularMap = textureLoader.loadFromFile(getResourcePath("textures/container2_specular.png"), "texture_specular");
+    std::shared_ptr<Texture> emissionMap = textureLoader.loadFromFile(getResourcePath("textures/matrix.jpg"), "texture_emissive");
     // TODO: Create builder for Material
-    Material material = { diffuseMap, specularMap, emissionMap, 64.0f };
+    Material material = { diffuseMap, specularMap, nullptr, 64.0f };
     DirectionalLightBuilder dirLightBuilder = DirectionalLightBuilder();
     dirLightBuilder
         .setProperties(glm::vec3(1.0), glm::vec3(1.0), glm::vec3(1.0))
@@ -102,11 +106,12 @@ int main(int argc, char** argv) {
 
     Mesh blockMesh = Meshes::Cube;
     Mesh lightMesh = Meshes::Cube;
-    std::shared_ptr<MeshBuffer> blockMeshBuffer = std::make_shared<MeshBuffer>(blockMesh, &material);
+    blockMesh.Textures = { diffuseMap, specularMap };
+    std::shared_ptr<MeshBuffer> blockMeshBuffer = std::make_shared<MeshBuffer>(blockMesh);
     std::shared_ptr<MeshBuffer> lightMeshBuffer = std::make_shared<MeshBuffer>(lightMesh);
 
     std::vector<glm::vec3> cubePositions = {
-        glm::vec3(0.0f,  0.0f,  0.0f),
+        glm::vec3(0.0f,  0.0f,  0.0f)/*,
         glm::vec3(2.0f,  5.0f, -15.0f),
         glm::vec3(-1.5f, -2.2f, -2.5f),
         glm::vec3(-3.8f, -2.0f, -12.3f),
@@ -116,7 +121,7 @@ int main(int argc, char** argv) {
         glm::vec3(1.5f,  2.0f, -2.5f),
         glm::vec3(1.5f,  0.2f, -1.5f),
         glm::vec3(-1.3f,  1.0f, -1.5f)
-        
+        */
     };
 
     std::vector<Transform3> blockTransformations = {};
@@ -202,7 +207,7 @@ int main(int argc, char** argv) {
 
             PointLightBuilder pointLightBuilder =
                 PointLightBuilder()
-                .setProperties({ 0.05f, 0.05f, 0.05f }, { 0.8f, 0.8f, 0.8f }, { .0f, 1.0f, 1.0f })
+                .setProperties({ 0.05f, 0.05f, 0.05f }, { 0.8f, 0.8f, 0.8f }, { 1.0f, 1.0f, 1.0f })
                 .setAttenuation(1.0f, 0.09f, 0.032f);
 
             for (int i = 0; i < pointLightPositions.size(); i++) {
@@ -221,10 +226,14 @@ int main(int argc, char** argv) {
             lighting.SpotLights.push_back(spotLight);
 
 
+            /*
             meshRenderer->render(screenDimensions, blockMeshBuffer, blockShader, camera, lighting, blockTransformations);
+*/
 
             // TODO: Custom renderer for point lights
             meshRenderer->render(screenDimensions, lightMeshBuffer, lightShader, camera, lighting, pointLightTransformations);
+
+            model.Draw(screenDimensions, blockShader, camera, lighting, blockTransformations);
 
             // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
             // -------------------------------------------------------------------------------    

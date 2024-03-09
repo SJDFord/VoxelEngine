@@ -7,5 +7,5 @@
 class TextureLoader
 {
 public:
-	std::shared_ptr<Texture> loadFromFile(const std::string& file);
+	std::shared_ptr<Texture> loadFromFile(const std::string& file, const std::string &type);
 };
