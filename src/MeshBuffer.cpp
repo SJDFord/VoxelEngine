@@ -42,7 +42,6 @@ MeshBuffer::MeshBuffer(
     glCheck(glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, Normal)));
 
     if (mesh.Textures.size() > 0) {
-        fprintf(stdout, "Textures enabled\n");
         // vertex texture coords
         glCheck(glEnableVertexAttribArray(2));
         glCheck(glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, TexCoords)));
@@ -58,6 +57,10 @@ std::vector<std::shared_ptr<Texture>> MeshBuffer::getTextures() const {
 }
 
 void MeshBuffer::draw() const {
+    bool wireframeMode = false;
+    if (wireframeMode) {
+        glCheck(glPolygonMode(GL_FRONT_AND_BACK, GL_LINE));
+    }
     glCheck(glBindVertexArray(_vao));
     if (_indexCount > 0) {
         glCheck(glDrawElements(GL_TRIANGLES, _indexCount, GL_UNSIGNED_INT, 0));
@@ -66,11 +69,13 @@ void MeshBuffer::draw() const {
         glCheck(glDrawArrays(GL_TRIANGLES, 0, _vertexCount));
     }
     glCheck(glBindVertexArray(0));
+    if (wireframeMode) {
+        glCheck(glPolygonMode(GL_FRONT_AND_BACK, GL_FILL));
+    }
 }
 
 MeshBuffer::~MeshBuffer() {
     glCheck(glDeleteVertexArrays(1, &_vao));
     glCheck(glDeleteBuffers(1, &_vbo));
     glCheck(glDeleteBuffers(1, &_ebo));
-    fprintf(stdout, "Mesh buffer disposed: %s\n", "placeholder");
 }

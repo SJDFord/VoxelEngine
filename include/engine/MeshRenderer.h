@@ -8,10 +8,18 @@ private:
 public:
     void render(
         glm::vec2 screenDimensions,
-        std::shared_ptr<MeshBuffer> meshBuffer,
+        const std::shared_ptr<MeshBuffer>& meshBuffer,
         std::shared_ptr<Shader> shader,
         BasicCamera& camera,
         Lighting lighting,
         std::vector<Transform3> instanceTransformations
-    );
+    ) const;
+    void render(
+        glm::vec2 screenDimensions,
+        const std::vector<std::shared_ptr<MeshBuffer>>& meshBuffers,
+        std::shared_ptr<Shader> shader,
+        BasicCamera& camera,
+        Lighting lighting,
+        std::vector<Transform3> instanceTransformations
+    ) const;
 };

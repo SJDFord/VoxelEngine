@@ -3,12 +3,12 @@
 
 void MeshRenderer::render(
     glm::vec2 screenDimensions,
-    std::shared_ptr<MeshBuffer> meshBuffer,
+    const std::shared_ptr<MeshBuffer>& meshBuffer,
     std::shared_ptr<Shader> shader,
     BasicCamera& camera,
     Lighting lighting,
-    std::vector<Transform3> instanceTransformations) 
-{
+    std::vector<Transform3> instanceTransformations
+) const {
     shader->use();
     
     bool diffuseFound = false;
@@ -71,6 +71,20 @@ void MeshRenderer::render(
 
         shader->setMat4("model", model);
         meshBuffer->draw();
+    }
+}
+
+
+void MeshRenderer::render(
+    glm::vec2 screenDimensions,
+    const std::vector<std::shared_ptr<MeshBuffer>>& meshBuffers,
+    std::shared_ptr<Shader> shader,
+    BasicCamera& camera,
+    Lighting lighting,
+    std::vector<Transform3> instanceTransformations) const
+{
+    for (int i = 0; i < meshBuffers.size(); i++) {
+        render(screenDimensions, meshBuffers[i], shader, camera, lighting, instanceTransformations);
     }
 }
 

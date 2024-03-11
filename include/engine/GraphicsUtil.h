@@ -1,6 +1,25 @@
 #pragma once
 #include <glm/glm.hpp>
 #include <engine/Mesh.h>
+#include <engine/Model.h>
+
+
+std::shared_ptr<MeshBuffer> createMeshBuffer(const Mesh& mesh) {
+    return std::make_shared<MeshBuffer>(mesh);
+}
+
+std::vector<std::shared_ptr<MeshBuffer>> createMeshBuffers(const std::vector<Mesh>& meshes) {
+    std::vector<std::shared_ptr<MeshBuffer>> meshBuffers;
+    for (int i = 0; i < meshes.size(); i++) {
+        Mesh m = meshes[i];
+        meshBuffers.push_back(createMeshBuffer(m));
+    }
+    return meshBuffers;
+}
+
+std::vector<std::shared_ptr<MeshBuffer>> createMeshBuffers(const Model& model) {
+    return createMeshBuffers(model.Meshes);
+}
 
 struct TextureCoords {
     static constexpr glm::vec2 BottomLeft = glm::vec2(0.0f, 0.0f);

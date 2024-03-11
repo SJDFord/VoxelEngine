@@ -13,11 +13,18 @@ class IMeshRenderer
 public:
     virtual void render(
         glm::vec2 screenDimensions,
-        std::shared_ptr<MeshBuffer> meshBuffer,
+        const std::shared_ptr<MeshBuffer>& meshBuffer,
         std::shared_ptr<Shader> shader, 
         BasicCamera& camera, 
         Lighting lighting,
         std::vector<Transform3> instanceTransformations
-    ) = 0;    // "= 0" part makes this method pure virtual, and
-    // also makes this class abstract.
+    ) const = 0; 
+    virtual void render(
+        glm::vec2 screenDimensions,
+        const std::vector<std::shared_ptr<MeshBuffer>>& meshBuffers,
+        std::shared_ptr<Shader> shader,
+        BasicCamera& camera,
+        Lighting lighting,
+        std::vector<Transform3> instanceTransformations
+    ) const = 0;
 };

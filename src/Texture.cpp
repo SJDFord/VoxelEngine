@@ -2,11 +2,10 @@
 #include <engine/glCheck.h>
 
 // Create a texture in the Graphics card
-Texture::Texture(unsigned char* data, unsigned int width, unsigned int height, unsigned int channels, std::string type, std::string identifier)
+Texture::Texture(unsigned char* data, unsigned int width, unsigned int height, unsigned int channels, std::string type, std::string name)
 {
-	fprintf(stdout, "Loaded texture %s %s\n", type.c_str(), identifier.c_str());
 	_type = type;
-	_identifier = identifier;
+	_name = name;
 	GLenum format;
 	switch (channels) {
 	case 1:
@@ -34,6 +33,7 @@ Texture::Texture(unsigned char* data, unsigned int width, unsigned int height, u
 	GLint filter = GL_NEAREST; // GL_LINEAR
 	glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter));
 	glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter));
+	fprintf(stdout, "Texture created: %s (%s)\n", name.c_str(), type.c_str());
 }
 
 void Texture::bind() const {
@@ -50,13 +50,13 @@ std::string Texture::getType() const {
 	return this->_type;
 }
 
-std::string Texture::getIdentifier() const {
-	return this->_identifier;
+std::string Texture::getName() const {
+	return this->_name;
 }
 
 // Delete the texture from the graphics card
 Texture::~Texture()
 {
 	glCheck(glDeleteTextures(1, &this->_id));
-	fprintf(stdout, "Texture disposed: %s\n", "placeholder");
+	fprintf(stdout, "Texture disposed: %s (%s)\n", _name.c_str(), _type.c_str());
 }

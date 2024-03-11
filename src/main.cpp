@@ -24,6 +24,7 @@
 #include <engine/WindowLibrary.h>
 #include <engine/GraphicsUtil.h>
 #include <engine/Model.h>
+#include <engine/ModelLoader.h>
 
 const std::filesystem::path RESOURCE_FOLDER("C:/Users/sjdf/Code/VoxelEngine/resources");
 std::string getResourcePath(const std::string relativePath);
@@ -54,18 +55,18 @@ glm::vec3 lightColor;
 
 int main(int argc, char** argv) {
     auto errorCallback = [](int code, const char* description)
-    {
-        fprintf(stderr, "Error: %s (%d)\n", description, code);
-    };
+        {
+            fprintf(stderr, "Error: %s (%d)\n", description, code);
+        };
     glfwSetErrorCallback(errorCallback);
 
     std::string title = "Minecraft Clone";
     std::unique_ptr<Window> window = std::make_unique<Window>(title, screenDimensions);
-    window->onResized = [](glm::vec2 newSize) { 
+    window->onResized = [](glm::vec2 newSize) {
         glCheck(glViewport(0, 0, newSize.x, newSize.y));
-        screenDimensions = newSize; 
-    };
-    window->onMouseMove = [](glm::dvec2 newPosition) { 
+        screenDimensions = newSize;
+        };
+    window->onMouseMove = [](glm::dvec2 newPosition) {
 
         float xpos = static_cast<float>(newPosition.x);
         float ypos = static_cast<float>(newPosition.y);
@@ -84,11 +85,12 @@ int main(int argc, char** argv) {
         lastY = ypos;
 
         camera.ProcessMouseMovement(xoffset, yoffset);
-    };
+        };
 
     //Model model("C:/Users/sjdf/Code/VoxelEngine/resources/models/black_dragon_with_idle_animation/scene.gltf");
-    Model model("C:/Users/sjdf/Code/VoxelEngine/resources/models/backpack/backpack.obj");
-    
+    ModelLoader modelLoader;
+    Model model = modelLoader.loadFromFile("C:/Users/sjdf/Code/VoxelEngine/resources/models/backpack/backpack.obj");
+
     ShaderLoader shaderLoader;
     std::shared_ptr<Shader> blockShader = shaderLoader.loadFromFile(getResourcePath("shaders/block.vertexshader"), getResourcePath("shaders/block.fragmentshader"));
     std::shared_ptr<Shader> lightShader = shaderLoader.loadFromFile(getResourcePath("shaders/light.vertexshader"), getResourcePath("shaders/light.fragmentshader"));
@@ -106,12 +108,13 @@ int main(int argc, char** argv) {
 
     Mesh blockMesh = Meshes::Cube;
     Mesh lightMesh = Meshes::Cube;
-    blockMesh.Textures = { diffuseMap, specularMap };
-    std::shared_ptr<MeshBuffer> blockMeshBuffer = std::make_shared<MeshBuffer>(blockMesh);
-    std::shared_ptr<MeshBuffer> lightMeshBuffer = std::make_shared<MeshBuffer>(lightMesh);
 
+    blockMesh.Textures = { diffuseMap, specularMap };
+    std::shared_ptr<MeshBuffer> blockMeshBuffer = createMeshBuffer(blockMesh);
+    std::shared_ptr<MeshBuffer> lightMeshBuffer = createMeshBuffer(lightMesh);
+    std::vector<std::shared_ptr<MeshBuffer>> modelMeshBuffers = createMeshBuffers(model);
     std::vector<glm::vec3> cubePositions = {
-        glm::vec3(0.0f,  0.0f,  0.0f)/*,
+        //glm::vec3(0.0f,  0.0f,  0.0f),
         glm::vec3(2.0f,  5.0f, -15.0f),
         glm::vec3(-1.5f, -2.2f, -2.5f),
         glm::vec3(-3.8f, -2.0f, -12.3f),
@@ -121,7 +124,6 @@ int main(int argc, char** argv) {
         glm::vec3(1.5f,  2.0f, -2.5f),
         glm::vec3(1.5f,  0.2f, -1.5f),
         glm::vec3(-1.3f,  1.0f, -1.5f)
-        */
     };
 
     std::vector<Transform3> blockTransformations = {};
@@ -135,6 +137,10 @@ int main(int argc, char** argv) {
 
         blockTransformations.push_back(blockTransformation);
     }
+
+    Transform3 modelTransform = Transform3Builder()
+        .translateTo(glm::vec3(0.0f, 0.0f, 0.0f))
+        .build();
 
     std::vector<glm::vec3> pointLightPositions = {
         glm::vec3(0.7f,  0.2f,  2.0f),
@@ -190,7 +196,8 @@ int main(int argc, char** argv) {
         double frameDelta = now - lastFrameTime;
         if (frameDelta >= fpsLimit) {
             float fps = 1.0f / frameDelta;
-            //fprintf(stdout, "FPS: %f\n", fps);
+            int fpsInt = std::round(fps);
+            //fprintf(stdout, "FPS: %i\n", fpsInt);
 
             // render
             // ------
@@ -226,14 +233,14 @@ int main(int argc, char** argv) {
             lighting.SpotLights.push_back(spotLight);
 
 
-            /*
             meshRenderer->render(screenDimensions, blockMeshBuffer, blockShader, camera, lighting, blockTransformations);
-*/
 
             // TODO: Custom renderer for point lights
             meshRenderer->render(screenDimensions, lightMeshBuffer, lightShader, camera, lighting, pointLightTransformations);
+          
+            meshRenderer->render(screenDimensions, modelMeshBuffers, blockShader, camera, lighting, { modelTransform });
 
-            model.Draw(screenDimensions, blockShader, camera, lighting, blockTransformations);
+            //model.Draw(screenDimensions, blockShader, camera, lighting, blockTransformations);
 
             // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
             // -------------------------------------------------------------------------------    
