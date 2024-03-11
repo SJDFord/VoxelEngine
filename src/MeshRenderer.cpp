@@ -70,7 +70,10 @@ void MeshRenderer::render(
         // glm::radians(angle)
 
         shader->setMat4("model", model);
+        // TODO: Make this configurable as some models can't be face culled
+        glCheck(glEnable(GL_CULL_FACE));
         meshBuffer->draw();
+        glCheck(glDisable(GL_CULL_FACE));
     }
 }
 

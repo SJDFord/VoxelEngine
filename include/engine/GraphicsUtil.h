@@ -58,12 +58,13 @@ Mesh Meshes::Cube = {
         {
             // Back
             {CubeCoords::BackBottomLeft, CubeNormals::Back, TextureCoords::BottomRight},
-            {CubeCoords::BackBottomRight, CubeNormals::Back, TextureCoords::BottomLeft},
             {CubeCoords::BackTopRight, CubeNormals::Back, TextureCoords::TopLeft},
+            {CubeCoords::BackBottomRight, CubeNormals::Back, TextureCoords::BottomLeft},
 
             {CubeCoords::BackTopRight, CubeNormals::Back, TextureCoords::TopLeft},
-            {CubeCoords::BackTopLeft, CubeNormals::Back, TextureCoords::TopRight},
             {CubeCoords::BackBottomLeft, CubeNormals::Back, TextureCoords::BottomRight},
+            {CubeCoords::BackTopLeft, CubeNormals::Back, TextureCoords::TopRight},
+            
 
             // Front
             {CubeCoords::FrontBottomLeft, CubeNormals::Front, TextureCoords::BottomLeft},
@@ -85,12 +86,12 @@ Mesh Meshes::Cube = {
 
             // Right
             {CubeCoords::FrontTopRight, CubeNormals::Right, TextureCoords::TopLeft},
-            {CubeCoords::BackTopRight, CubeNormals::Right, TextureCoords::TopRight},
             {CubeCoords::BackBottomRight, CubeNormals::Right, TextureCoords::BottomRight},
+            {CubeCoords::BackTopRight, CubeNormals::Right, TextureCoords::TopRight},
 
             {CubeCoords::BackBottomRight, CubeNormals::Right, TextureCoords::BottomRight},
-            {CubeCoords::FrontBottomRight, CubeNormals::Right, TextureCoords::BottomLeft},
             {CubeCoords::FrontTopRight, CubeNormals::Right, TextureCoords::TopLeft},
+            {CubeCoords::FrontBottomRight, CubeNormals::Right, TextureCoords::BottomLeft},
 
             // Bottom
             {CubeCoords::BackBottomLeft, CubeNormals::Bottom, TextureCoords::BottomLeft},
@@ -103,12 +104,12 @@ Mesh Meshes::Cube = {
 
             // Top
             {CubeCoords::BackTopLeft, CubeNormals::Top, TextureCoords::TopLeft},
-            {CubeCoords::BackTopRight, CubeNormals::Top, TextureCoords::TopRight},
             {CubeCoords::FrontTopRight, CubeNormals::Top, TextureCoords::BottomRight},
+            {CubeCoords::BackTopRight, CubeNormals::Top, TextureCoords::TopRight},
 
             {CubeCoords::FrontTopRight, CubeNormals::Top, TextureCoords::BottomRight},
+            {CubeCoords::BackTopLeft, CubeNormals::Top, TextureCoords::TopLeft},
             {CubeCoords::FrontTopLeft, CubeNormals::Top, TextureCoords::BottomLeft},
-            {CubeCoords::BackTopLeft, CubeNormals::Top, TextureCoords::TopLeft}
         },
         {},
         {}

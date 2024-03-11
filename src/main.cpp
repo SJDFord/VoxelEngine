@@ -197,7 +197,7 @@ int main(int argc, char** argv) {
         if (frameDelta >= fpsLimit) {
             float fps = 1.0f / frameDelta;
             int fpsInt = std::round(fps);
-            //fprintf(stdout, "FPS: %i\n", fpsInt);
+            fprintf(stdout, "FPS: %i\n", fpsInt);
 
             // render
             // ------
