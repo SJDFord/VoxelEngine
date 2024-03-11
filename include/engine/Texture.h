@@ -4,15 +4,18 @@
 
 enum TextureType {
 	DIFFUSE,
-	SPECULAR
+	SPECULAR,
+	EMISSIVE
 };
+
+std::string toString(TextureType type);
 
 class Texture
 {
 private:
 
 	GLuint _id;
-	std::string _type;
+	TextureType _type;
 	std::string _name;
 
 	Texture(const Texture&) = default;                // 1/5: Copy Ctor
@@ -20,11 +23,11 @@ private:
 	Texture& operator=(const Texture&) = default;     // 2/5: Copy Assignment
 	Texture& operator=(Texture&&) noexcept = default; // 5/5: Move Assignment
 public:
-	Texture(unsigned char* data, unsigned int width, unsigned int height, unsigned int channels, std::string type, std::string name);
+	Texture(unsigned char* data, unsigned int width, unsigned int height, unsigned int channels, TextureType type, std::string name);
 	~Texture();
 
 	void bind() const;
 	GLuint getId() const;
-	std::string getType() const;
+	TextureType getType() const;
 	std::string getName() const;
 };

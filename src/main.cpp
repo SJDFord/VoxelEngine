@@ -95,9 +95,9 @@ int main(int argc, char** argv) {
     std::shared_ptr<Shader> blockShader = shaderLoader.loadFromFile(getResourcePath("shaders/block.vertexshader"), getResourcePath("shaders/block.fragmentshader"));
     std::shared_ptr<Shader> lightShader = shaderLoader.loadFromFile(getResourcePath("shaders/light.vertexshader"), getResourcePath("shaders/light.fragmentshader"));
     TextureLoader textureLoader;
-    std::shared_ptr<Texture> diffuseMap = textureLoader.loadFromFile(getResourcePath("textures/container2.png"), "texture_diffuse");
-    std::shared_ptr<Texture> specularMap = textureLoader.loadFromFile(getResourcePath("textures/container2_specular.png"), "texture_specular");
-    std::shared_ptr<Texture> emissionMap = textureLoader.loadFromFile(getResourcePath("textures/matrix.jpg"), "texture_emissive");
+    std::shared_ptr<Texture> diffuseMap = textureLoader.loadFromFile(getResourcePath("textures/container2.png"), TextureType::DIFFUSE);
+    std::shared_ptr<Texture> specularMap = textureLoader.loadFromFile(getResourcePath("textures/container2_specular.png"), TextureType::SPECULAR);
+    std::shared_ptr<Texture> emissionMap = textureLoader.loadFromFile(getResourcePath("textures/matrix.jpg"), TextureType::EMISSIVE);
     // TODO: Create builder for Material
     Material material = { diffuseMap, specularMap, nullptr, 64.0f };
     DirectionalLightBuilder dirLightBuilder = DirectionalLightBuilder();

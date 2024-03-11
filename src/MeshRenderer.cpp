@@ -18,13 +18,13 @@ void MeshRenderer::render(
     for (int i = 0; i < textures.size(); i++) {  
         glCheck(glActiveTexture(GL_TEXTURE0 + i));
         std::shared_ptr<Texture> texture = textures[i];
-        std::string textureType = texture->getType();
-        if(textureType == "texture_diffuse" && !diffuseFound) {
+        TextureType textureType = texture->getType();
+        if(textureType == TextureType::DIFFUSE && !diffuseFound) {
             shader->setInt("material.diffuse", i);  
             texture->bind();  
             diffuseFound = true;
         }
-        else if(textureType == "texture_specular" && !specularFound) {
+        else if(textureType == TextureType::SPECULAR && !specularFound) {
             shader->setInt("material.specular", i);
             texture->bind();
             specularFound = true;

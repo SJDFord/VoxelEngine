@@ -111,25 +111,42 @@ Mesh ModelLoader::processMesh(aiMesh *mesh, const aiScene *scene) {
     // normal: texture_normalN
 
     // 1. diffuse maps
-    std::vector<std::shared_ptr<Texture>> diffuseMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_diffuse");
+    std::vector<std::shared_ptr<Texture>> diffuseMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE);
     textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
     // 2. specular maps
-    std::vector<std::shared_ptr<Texture>> specularMaps = loadMaterialTextures(material, aiTextureType_SPECULAR, "texture_specular");
+    std::vector<std::shared_ptr<Texture>> specularMaps = loadMaterialTextures(material, aiTextureType_SPECULAR);
     textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
+    /*
     // 3. normal maps
-    std::vector<std::shared_ptr<Texture>> normalMaps = loadMaterialTextures(material, aiTextureType_HEIGHT, "texture_normal");
+    std::vector<std::shared_ptr<Texture>> normalMaps = loadMaterialTextures(material, aiTextureType_HEIGHT);
     textures.insert(textures.end(), normalMaps.begin(), normalMaps.end());
     // 4. height maps
-    std::vector<std::shared_ptr<Texture>> heightMaps = loadMaterialTextures(material, aiTextureType_AMBIENT, "texture_height");
+    std::vector<std::shared_ptr<Texture>> heightMaps = loadMaterialTextures(material, aiTextureType_AMBIENT);
     textures.insert(textures.end(), heightMaps.begin(), heightMaps.end());
-    
+    */
+
     // return a mesh object created from the extracted mesh data
     
     Mesh m = {vertices, indices, textures};
     return m;
 }
 
-std::vector<std::shared_ptr<Texture>> ModelLoader::loadMaterialTextures(aiMaterial *mat, aiTextureType type, std::string typeName) {
+std::vector<std::shared_ptr<Texture>> ModelLoader::loadMaterialTextures(aiMaterial *mat, aiTextureType type) {
+    TextureType engineTextureType;
+    switch (type) {
+    case aiTextureType_DIFFUSE:
+        engineTextureType = TextureType::DIFFUSE;
+        break;
+    case aiTextureType_SPECULAR:
+        engineTextureType = TextureType::SPECULAR;
+        break;
+    case aiTextureType_EMISSIVE:
+        engineTextureType = TextureType::EMISSIVE;
+        break;
+    default:
+        throw "Assimp texture type not supported";
+    }
+    
     std::vector<std::shared_ptr<Texture>> meshTextures;
     for(unsigned int i = 0; i < mat->GetTextureCount(type); i++)
     {
@@ -141,7 +158,7 @@ std::vector<std::shared_ptr<Texture>> ModelLoader::loadMaterialTextures(aiMateri
         auto loadedTexture = std::find_if(std::begin(_texturesLoaded), std::end(_texturesLoaded), nameMatches);
         if (loadedTexture == std::end(_texturesLoaded)) {
             TextureLoader textureLoader;
-            std::shared_ptr<Texture> texture = textureLoader.loadFromFile(textureName, typeName);
+            std::shared_ptr<Texture> texture = textureLoader.loadFromFile(textureName, engineTextureType);
 
             meshTextures.push_back(texture);
             _texturesLoaded.push_back(texture);  // store it as texture loaded for entire model, to ensure we won't unnecessary load duplicate textures.

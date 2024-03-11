@@ -1,8 +1,21 @@
 #include "engine/Texture.h"
 #include <engine/glCheck.h>
 
+std::string toString(TextureType type) {
+	switch (type) {
+	case DIFFUSE:
+		return "DIFFUSE";
+	case SPECULAR:
+		return "SPECULAR";
+	case EMISSIVE:
+		return "EMISSIVE";
+	default:
+		throw "Type string not implemented for type " + std::to_string(type);
+	}
+}
+
 // Create a texture in the Graphics card
-Texture::Texture(unsigned char* data, unsigned int width, unsigned int height, unsigned int channels, std::string type, std::string name)
+Texture::Texture(unsigned char* data, unsigned int width, unsigned int height, unsigned int channels, TextureType type, std::string name)
 {
 	_type = type;
 	_name = name;
@@ -33,7 +46,7 @@ Texture::Texture(unsigned char* data, unsigned int width, unsigned int height, u
 	GLint filter = GL_NEAREST; // GL_LINEAR
 	glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter));
 	glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter));
-	fprintf(stdout, "Texture created: %s (%s)\n", name.c_str(), type.c_str());
+	fprintf(stdout, "Texture created: %s (%s)\n", name.c_str(), toString(type).c_str());
 }
 
 void Texture::bind() const {
@@ -46,7 +59,7 @@ GLuint Texture::getId() const
 }
 
 
-std::string Texture::getType() const {
+TextureType Texture::getType() const {
 	return this->_type;
 }
 
@@ -58,5 +71,5 @@ std::string Texture::getName() const {
 Texture::~Texture()
 {
 	glCheck(glDeleteTextures(1, &this->_id));
-	fprintf(stdout, "Texture disposed: %s (%s)\n", _name.c_str(), _type.c_str());
+	fprintf(stdout, "Texture disposed: %s (%s)\n", _name.c_str(), toString(_type).c_str());
 }
