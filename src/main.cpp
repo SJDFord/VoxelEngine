@@ -29,6 +29,7 @@
 #include <engine/TexturePropertiesBuilder.h>
 #include <engine/FrameBufferRenderer.h>
 
+
 const std::filesystem::path RESOURCE_FOLDER("C:/Users/sjdf/Code/VoxelEngine/resources");
 std::string getResourcePath(const std::string relativePath);
 
@@ -102,6 +103,9 @@ int main(int argc, char** argv) {
     //Model model("C:/Users/sjdf/Code/VoxelEngine/resources/models/black_dragon_with_idle_animation/scene.gltf");
     ModelLoader modelLoader;
     Model model = modelLoader.loadFromFile("C:/Users/sjdf/Code/VoxelEngine/resources/models/backpack/backpack.obj");
+
+
+    // TODO: Idea: 'validate' shader code after loading in to ensure that it has certain required layouts and uniforms - maybe even a concept of shader types (?) too in order to encapsulate these validation rules
 
     ShaderLoader shaderLoader;
     std::shared_ptr<Shader> blockShader = shaderLoader.loadFromFile(getResourcePath("shaders/block.vertexshader"), getResourcePath("shaders/block.fragmentshader"));
