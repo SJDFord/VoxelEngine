@@ -25,13 +25,15 @@
 #include <engine/GraphicsUtil.h>
 #include <engine/Model.h>
 #include <engine/ModelLoader.h>
+#include <engine/FrameBuffer.h>
+#include <engine/TexturePropertiesBuilder.h>
+#include <engine/FrameBufferRenderer.h>
 
 const std::filesystem::path RESOURCE_FOLDER("C:/Users/sjdf/Code/VoxelEngine/resources");
 std::string getResourcePath(const std::string relativePath);
-void setupLighting(std::shared_ptr<Shader> shader, Lighting lighting);
 
 // settings
-glm::vec2 screenDimensions = {1600, 1200};
+glm::uvec2 screenDimensions = {1600, 1200};
 
 // camera
 BasicCamera camera(Basic_Camera_Type::FPS, glm::vec3(0.0f, 0.0f, 3.0f));
@@ -52,6 +54,16 @@ glm::vec3 blockPos(0, 0, 0);
 glm::vec3 lightPos(1.2f, 1.0f, 1.0f);
 
 glm::vec3 lightColor;
+
+std::vector<Vertex> quadVertices = {
+    {{ -1.0f,  1.0f, 0.0f}, {}, {0.0f, 1.0f}},
+    {{-1.0f, -1.0f, 0.0f},  {},{0.0f, 0.0f}},
+    {{ 1.0f, -1.0f, 0.0f},  {},{1.0f, 0.0f}},
+
+    {{-1.0f,  1.0f, 0.0f},  {},{0.0f, 1.0f}},
+    {{ 1.0f, -1.0f, 0.0f},  {},{1.0f, 0.0f}},
+    {{ 1.0f,  1.0f, 0.0f},  {},{1.0f, 1.0f}}
+};
 
 int main(int argc, char** argv) {
     auto errorCallback = [](int code, const char* description)
@@ -94,6 +106,8 @@ int main(int argc, char** argv) {
     ShaderLoader shaderLoader;
     std::shared_ptr<Shader> blockShader = shaderLoader.loadFromFile(getResourcePath("shaders/block.vertexshader"), getResourcePath("shaders/block.fragmentshader"));
     std::shared_ptr<Shader> lightShader = shaderLoader.loadFromFile(getResourcePath("shaders/light.vertexshader"), getResourcePath("shaders/light.fragmentshader"));
+    std::shared_ptr<Shader> screenShader = shaderLoader.loadFromFile(getResourcePath("shaders/framebuffers_screen.vertexshader"), getResourcePath("shaders/framebuffers_screen.fragmentshader"));
+
     TextureLoader textureLoader;
     std::shared_ptr<Texture> diffuseMap = textureLoader.loadFromFile(getResourcePath("textures/container2.png"), TextureType::DIFFUSE);
     std::shared_ptr<Texture> specularMap = textureLoader.loadFromFile(getResourcePath("textures/container2_specular.png"), TextureType::SPECULAR);
@@ -109,10 +123,19 @@ int main(int argc, char** argv) {
     Mesh blockMesh = Meshes::Cube;
     Mesh lightMesh = Meshes::Cube;
 
+    TexturePropertiesBuilder texturePropertiesBuilder;
+    TextureProperties textureProperties = texturePropertiesBuilder.build();
+    std::shared_ptr<Texture> frameBufferTexture = std::make_shared<Texture>(nullptr, screenDimensions, TextureFormat::COLOUR, textureProperties);
+    std::shared_ptr<RenderBuffer> renderBuffer = std::make_shared<RenderBuffer>(screenDimensions);
+    std::shared_ptr<FrameBuffer> frameBuffer = std::make_shared<FrameBuffer>(frameBufferTexture, renderBuffer);
+    Mesh screenMesh = { quadVertices, {}, { frameBufferTexture } };
+
     blockMesh.Textures = { diffuseMap, specularMap };
     std::shared_ptr<MeshBuffer> blockMeshBuffer = createMeshBuffer(blockMesh);
     std::shared_ptr<MeshBuffer> lightMeshBuffer = createMeshBuffer(lightMesh);
     std::vector<std::shared_ptr<MeshBuffer>> modelMeshBuffers = createMeshBuffers(model);
+    std::shared_ptr<MeshBuffer> screenMeshBuffer = std::make_shared<MeshBuffer>(screenMesh);
+
     std::vector<glm::vec3> cubePositions = {
         //glm::vec3(0.0f,  0.0f,  0.0f),
         glm::vec3(2.0f,  5.0f, -15.0f),
@@ -159,10 +182,10 @@ int main(int argc, char** argv) {
 
         pointLightTransformations.push_back(transform);
 
-    }
-    
+    }    
    
-    IMeshRenderer *meshRenderer = new MeshRenderer();
+    MeshRenderer meshRenderer;
+    FrameBufferRenderer frameBufferRenderer;
 
 	do {
         double now = glfwGetTime();
@@ -198,9 +221,10 @@ int main(int argc, char** argv) {
             float fps = 1.0f / frameDelta;
             int fpsInt = std::round(fps);
             fprintf(stdout, "FPS: %i\n", fpsInt);
-
+            frameBuffer->bind();
             // render
             // ------
+            glEnable(GL_DEPTH_TEST);
             glCheck(glClearColor(0.2f, 0.3f, 0.3f, 1.0f));
             glCheck(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 
@@ -233,14 +257,24 @@ int main(int argc, char** argv) {
             lighting.SpotLights.push_back(spotLight);
 
 
-            meshRenderer->render(screenDimensions, blockMeshBuffer, blockShader, camera, lighting, blockTransformations);
+            meshRenderer.render(screenDimensions, blockMeshBuffer, blockShader, camera, lighting, blockTransformations);
 
             // TODO: Custom renderer for point lights
-            meshRenderer->render(screenDimensions, lightMeshBuffer, lightShader, camera, lighting, pointLightTransformations);
+            meshRenderer.render(screenDimensions, lightMeshBuffer, lightShader, camera, lighting, pointLightTransformations);
           
-            meshRenderer->render(screenDimensions, modelMeshBuffers, blockShader, camera, lighting, { modelTransform });
+            meshRenderer.render(screenDimensions, modelMeshBuffers, blockShader, camera, lighting, { modelTransform });
 
             //model.Draw(screenDimensions, blockShader, camera, lighting, blockTransformations);
+
+            
+            glBindFramebuffer(GL_FRAMEBUFFER, 0);
+            glDisable(GL_DEPTH_TEST); // disable depth test so screen-space quad isn't discarded due to depth test.
+            // clear all relevant buffers
+            glClearColor(1.0f, 1.0f, 1.0f, 1.0f); // set clear color to white (not really necessary actually, since we won't be able to see behind the quad anyways)
+            glClear(GL_COLOR_BUFFER_BIT);
+
+            frameBufferRenderer.render(screenMeshBuffer, screenShader);
+          
 
             // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
             // -------------------------------------------------------------------------------    
@@ -255,60 +289,10 @@ int main(int argc, char** argv) {
 
 	} // Check if the ESC key was pressed or the window was closed
 	while (!window->shouldClose());
-
-    delete meshRenderer;
 }
 
 std::string getResourcePath(const std::string relativePathStr) {
     std::filesystem::path relativePath(relativePathStr);
     std::filesystem::path resourcePath = RESOURCE_FOLDER / relativePath;
     return resourcePath.string();
-}
-
-void setupLighting(std::shared_ptr<Shader> shader, Lighting lighting)
-{
-    int dirLightCount = lighting.DirectionalLights.size();
-    shader->setInt("dirLightCount", dirLightCount);
-    for (int i = 0; i < dirLightCount; i++) {
-        DirectionalLight light = lighting.DirectionalLights[i];
-        std::string prefix = "dirLights[" + std::to_string(i) + "].";
-        shader->setVec3(prefix + "direction", light.Direction);
-        shader->setVec3(prefix + "ambient", light.Properties.Ambient);
-        shader->setVec3(prefix + "diffuse", light.Properties.Diffuse);
-        shader->setVec3(prefix + "specular", light.Properties.Specular);
-    }
-
-    int pointLightCount = lighting.PointLights.size();
-    shader->setInt("pointLightCount", pointLightCount);
-    for (int i = 0; i < pointLightCount; i++) {
-        PointLight light = lighting.PointLights[i];
-        std::string prefix = "pointLights[" + std::to_string(i) + "].";
-        shader->setVec3(prefix + "position", light.Position);
-        shader->setVec3(prefix + "ambient", light.Properties.Ambient);
-        shader->setVec3(prefix + "diffuse", light.Properties.Diffuse);
-        shader->setVec3(prefix + "specular", light.Properties.Specular);
-
-        shader->setFloat(prefix + "constant", light.Attenuation.Constant);
-        shader->setFloat(prefix + "linear", light.Attenuation.Linear);
-        shader->setFloat(prefix + "quadratic", light.Attenuation.Quadratic);
-    }
-
-    int spotLightCount = lighting.SpotLights.size();
-    shader->setInt("spotLightCount", spotLightCount);
-    for (int i = 0; i < spotLightCount; i++) {
-        SpotLight light = lighting.SpotLights[i];
-        std::string prefix = "spotLights[" + std::to_string(i) + "].";
-        shader->setVec3(prefix + "position", light.Position);
-        shader->setVec3(prefix + "position", light.Direction);
-        shader->setVec3(prefix + "ambient", light.Properties.Ambient);
-        shader->setVec3(prefix + "diffuse", light.Properties.Diffuse);
-        shader->setVec3(prefix + "specular", light.Properties.Specular);
-
-        shader->setFloat(prefix + "constant", light.Attenuation.Constant);
-        shader->setFloat(prefix + "linear", light.Attenuation.Linear);
-        shader->setFloat(prefix + "quadratic", light.Attenuation.Quadratic);
-
-        shader->setFloat(prefix + "cutOff", light.CutOff);
-        shader->setFloat(prefix + "outerCutOff", light.OuterCutOff);
-    }
 }

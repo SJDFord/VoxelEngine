@@ -154,7 +154,7 @@ std::vector<std::shared_ptr<Texture>> ModelLoader::loadMaterialTextures(aiMateri
         mat->GetTexture(type, i, &str);
         std::string textureName = this->_directory + "/" + str.C_Str();
         // check if texture was loaded before and if so, continue to next iteration: skip loading a new texture
-        auto nameMatches = [textureName](std::shared_ptr<Texture> texture) { return texture->getName().compare(textureName) == 0; };
+        auto nameMatches = [textureName](std::shared_ptr<Texture> texture) { return texture->getProperties().Name.compare(textureName) == 0; };
         auto loadedTexture = std::find_if(std::begin(_texturesLoaded), std::end(_texturesLoaded), nameMatches);
         if (loadedTexture == std::end(_texturesLoaded)) {
             TextureLoader textureLoader;

@@ -15,20 +15,22 @@ std::string toString(TextureType type) {
 }
 
 // Create a texture in the Graphics card
-Texture::Texture(unsigned char* data, unsigned int width, unsigned int height, unsigned int channels, TextureType type, std::string name)
+Texture::Texture(unsigned char* data, glm::uvec2 dimensions, TextureFormat format, TextureProperties properties)
 {
-	_type = type;
-	_name = name;
-	GLenum format;
-	switch (channels) {
-	case 1:
-		format = GL_RED;
+	_dimensions = dimensions;
+	_format = format;
+	_properties = properties;
+
+	GLenum glFormat;
+	switch (format) {
+	case TextureFormat::GRAYSCALE:
+		glFormat = GL_RED;
 		break;
-	case 3:
-		format = GL_RGB;
+	case TextureFormat::COLOUR:
+		glFormat = GL_RGB;
 		break;
-	case 4:
-		format = GL_RGBA;
+	case TextureFormat::COLOUR_WITH_TRANSPARENCY:
+		glFormat = GL_RGBA;
 		break;
 	default:
 		throw "Invalid format specified";
@@ -36,17 +38,23 @@ Texture::Texture(unsigned char* data, unsigned int width, unsigned int height, u
 
 	glCheck(glGenTextures(1, &this->_id));
 	glCheck(glBindTexture(GL_TEXTURE_2D, this->_id));
-	glCheck(glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data));
-	glCheck(glGenerateMipmap(GL_TEXTURE_2D));
-
+	glCheck(glTexImage2D(GL_TEXTURE_2D, 0, glFormat, dimensions.x, dimensions.y, 0, glFormat, GL_UNSIGNED_BYTE, data));
+	
 	// set the texture wrapping parameters
-	glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT));
-	glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT));
-	// set texture filtering parameters
-	GLint filter = GL_NEAREST; // GL_LINEAR
-	glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter));
-	glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter));
-	fprintf(stdout, "Texture created: %s (%s)\n", name.c_str(), toString(type).c_str());
+
+	TextureWrapping wrapping = properties.Wrapping;
+	glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, convertWrapModeToGl(wrapping.HorizontalWrapMode)));
+	glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, convertWrapModeToGl(wrapping.VerticalWrapMode)));
+
+	TextureFiltering filtering = properties.Filtering;
+	glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, convertFilterToGl(filtering.Min)));
+	glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, convertFilterToGl(filtering.Mag)));
+
+	if (properties.UseMipMaps) {
+		glCheck(glGenerateMipmap(GL_TEXTURE_2D));
+	}
+
+	fprintf(stdout, "Texture created: %s (%s)\n", this->_properties.Name.c_str(), toString(this->_properties.Type).c_str());
 }
 
 void Texture::bind() const {
@@ -59,17 +67,55 @@ GLuint Texture::getId() const
 }
 
 
-TextureType Texture::getType() const {
-	return this->_type;
+glm::uvec2 Texture::getDimensions() const
+{
+	return this->_dimensions;
 }
 
-std::string Texture::getName() const {
-	return this->_name;
+TextureFormat Texture::getFormat() const
+{
+	return this->_format;
+}
+
+TextureProperties Texture::getProperties() const
+{
+	return this->_properties;
 }
 
 // Delete the texture from the graphics card
 Texture::~Texture()
 {
-	glCheck(glDeleteTextures(1, &this->_id));
-	fprintf(stdout, "Texture disposed: %s (%s)\n", _name.c_str(), toString(_type).c_str());
+	this->Release();
+	//glCheck(glDeleteTextures(1, &this->_id));
+	//fprintf(stdout, "Texture disposed: %s (%s)\n", this->_properties.Name.c_str(), toString(this->_properties.Type).c_str());
+}
+
+
+GLenum Texture::convertWrapModeToGl(TextureWrapMode mode) {
+	switch (mode) {
+	case TextureWrapMode::REPEAT:
+		return GL_REPEAT;
+	case TextureWrapMode::MIRRORED_REPEAT:
+		return GL_MIRRORED_REPEAT;
+
+	case TextureWrapMode::CLAMP_TO_BORDER:
+		return GL_CLAMP_TO_BORDER;
+
+	case TextureWrapMode::CLAMP_TO_EDGE:
+		return GL_CLAMP_TO_EDGE;
+	default:
+		throw "Wrap mode not supported";
+	}
+}
+
+
+GLenum Texture::convertFilterToGl(TextureFilter filter) {
+	switch (filter) {
+	case NEAREST:
+		return GL_NEAREST;
+	case LINEAR:
+		return GL_LINEAR;
+	default:
+		throw "Filter not supported";
+	}
 }

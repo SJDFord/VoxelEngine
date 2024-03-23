@@ -18,7 +18,7 @@ void MeshRenderer::render(
     for (int i = 0; i < textures.size(); i++) {  
         glCheck(glActiveTexture(GL_TEXTURE0 + i));
         std::shared_ptr<Texture> texture = textures[i];
-        TextureType textureType = texture->getType();
+        TextureType textureType = texture->getProperties().Type;
         if(textureType == TextureType::DIFFUSE && !diffuseFound) {
             shader->setInt("material.diffuse", i);  
             texture->bind();  

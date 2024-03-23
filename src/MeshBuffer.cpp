@@ -51,7 +51,6 @@ MeshBuffer::MeshBuffer(
 
 }
 
-
 std::vector<std::shared_ptr<Texture>> MeshBuffer::getTextures() const {
     return _textures;
 }

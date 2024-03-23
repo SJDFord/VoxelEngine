@@ -11,3 +11,9 @@ struct Vertex {
     // Texture coordinates
     glm::vec2 TexCoords;
 };
+
+struct Vertex2 {
+    glm::vec2 Position;
+
+    glm::vec2 TexCoords;
+};

@@ -14,7 +14,7 @@
 #------------------------------------------------------------------------------
 
 #---- Global options ----
-set(PROJECT_NAME_VAL                  "minecraftClone")
+set(PROJECT_NAME_VAL                  "engine")
 set(PROJECT_SUMMARY_VAL               "description")
 set(PROJECT_VENDOR_NAME_VAL           "your-name")
 set(PROJECT_VENDOR_CONTACT_VAL        "contact")
@@ -36,7 +36,7 @@ set(BUILD_STANDARD_VERSION_VAL        "17")
 set(BUILD_TYPE_VAL                    "debug")
 set(MAIN_BINARY_TARGET_TYPE_VAL       "exec")
 set(COMPILE_DEFINITIONS_VAL           "")
-set(PUBLIC_HEADERS_SEPARATED_VAL      off)
+set(PUBLIC_HEADERS_SEPARATED_VAL      on)
 set(USE_PRECOMPILED_HEADER_VAL        off)
 if("${CMAKE_HOST_SYSTEM_NAME}" STREQUAL "Linux")
 	set(COMPILE_TOOLCHAIN_FILE_VAL    "${CMAKE_SOURCE_DIR}/cmake/toolchains/Linux_gcc.cmake")
